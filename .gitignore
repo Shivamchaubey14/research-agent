@@ -1,0 +1,33 @@
+# Env / secrets
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Django
+*.sqlite3
+/backend/staticfiles/
+/backend/media/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+*.local
+
+# Docker / data
+*.log
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
