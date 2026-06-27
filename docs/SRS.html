@@ -9,10 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Source+Serif+4:ital,opt@0,8..60;1,8..60&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#1a2233; --ink-soft:#3c4858; --muted:#6b7685; --line:#e2e6ee;
-    --brand:#2b50d8; --brand-dark:#1b2f7a; --brand-soft:#eef2ff;
-    --accent:#0fb5a6; --warn:#e8833a; --bg:#ffffff; --page:#ffffff;
-    --code-bg:#f5f7fb;
+    --ink:#1b1c1e; --ink-soft:#3a3d42; --muted:#71757c; --line:#d8dbe0;
+    --brand:#324a72; --brand-dark:#26344c; --brand-soft:#f1f3f7;
+    --accent:#2f6f66; --warn:#9a5d12; --bg:#ffffff; --page:#ffffff;
+    --code-bg:#f4f5f7; --th:#3a3f49; --rule:#26344c;
   }
   *{box-sizing:border-box;}
   html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -33,10 +33,11 @@
   }
   /* ---- typography ---- */
   h1,h2,h3,h4,.ui{ font-family:'Inter',system-ui,sans-serif; color:var(--ink); }
-  h1{ font-size:21pt; font-weight:800; letter-spacing:-.4px; margin:0 0 6px; }
-  h2{ font-size:15.5pt; font-weight:700; margin:26px 0 8px; padding-bottom:6px;
-      border-bottom:2px solid var(--brand); color:var(--brand-dark); }
-  h3{ font-size:12.2pt; font-weight:700; margin:18px 0 4px; color:var(--ink); }
+  h1{ font-size:20pt; font-weight:700; letter-spacing:-.2px; margin:0 0 6px; color:var(--ink);
+      padding-bottom:8px; border-bottom:1px solid var(--line); }
+  h2{ font-size:14.5pt; font-weight:600; margin:24px 0 8px; padding-bottom:5px;
+      border-bottom:1px solid var(--line); color:var(--ink); }
+  h3{ font-size:12pt; font-weight:600; margin:18px 0 4px; color:var(--ink); }
   h4{ font-size:10.6pt; font-weight:700; margin:13px 0 2px; color:var(--ink-soft);
       text-transform:uppercase; letter-spacing:.6px; }
   p{ margin:7px 0; }
@@ -53,11 +54,11 @@
   /* ---- tables ---- */
   table{ width:100%; border-collapse:collapse; margin:12px 0; font-family:'Inter',sans-serif;
          font-size:9pt; }
-  th{ background:var(--brand-dark); color:#fff; text-align:left; padding:7px 9px; font-weight:600;
-      border:1px solid var(--brand-dark); }
+  th{ background:var(--th); color:#fff; text-align:left; padding:7px 9px; font-weight:600;
+      border:1px solid var(--th); }
   td{ padding:6px 9px; border:1px solid var(--line); vertical-align:top; }
-  tr:nth-child(even) td{ background:#f7f9fc; }
-  .req-id{ font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--brand-dark);
+  tr:nth-child(even) td{ background:#f6f7f9; }
+  .req-id{ font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--ink-soft);
            white-space:nowrap; }
   /* ---- components ---- */
   .tag{ display:inline-block; font-family:'Inter',sans-serif; font-size:7.6pt; font-weight:700;
@@ -91,7 +92,7 @@
   body{ counter-reset:pg; }
   /* ---- cover ---- */
   .cover{ padding:0; color:#fff; display:flex; flex-direction:column;
-          background:linear-gradient(150deg,#16225a 0%,#23379a 45%,#2b50d8 100%); }
+          background:linear-gradient(155deg,#1a2030 0%,#26344c 55%,#324a72 100%); }
   .cover-band{ padding:30mm 22mm 0; flex:1; }
   .cover .eyebrow{ font-family:'Inter',sans-serif; letter-spacing:4px; font-size:9pt;
                    text-transform:uppercase; opacity:.8; font-weight:600; }
@@ -378,9 +379,9 @@
         </marker>
       </defs>
       <!-- actors -->
-      <circle cx="70" cy="90" r="16" fill="#2b50d8"/><line x1="70" y1="106" x2="70" y2="140" stroke="#2b50d8" stroke-width="3"/>
-      <line x1="50" y1="120" x2="90" y2="120" stroke="#2b50d8" stroke-width="3"/>
-      <line x1="70" y1="140" x2="54" y2="165" stroke="#2b50d8" stroke-width="3"/><line x1="70" y1="140" x2="86" y2="165" stroke="#2b50d8" stroke-width="3"/>
+      <circle cx="70" cy="90" r="16" fill="#324a72"/><line x1="70" y1="106" x2="70" y2="140" stroke="#324a72" stroke-width="3"/>
+      <line x1="50" y1="120" x2="90" y2="120" stroke="#324a72" stroke-width="3"/>
+      <line x1="70" y1="140" x2="54" y2="165" stroke="#324a72" stroke-width="3"/><line x1="70" y1="140" x2="86" y2="165" stroke="#324a72" stroke-width="3"/>
       <text x="70" y="185" text-anchor="middle" font-size="11" font-weight="600" fill="#1a2233">Researcher</text>
       <text x="70" y="199" text-anchor="middle" font-size="9" fill="#6b7685">(end user)</text>
 
@@ -389,8 +390,8 @@
       <text x="70" y="296" text-anchor="middle" font-size="9" fill="#6b7685">Administrator</text>
 
       <!-- system boundary -->
-      <rect x="200" y="40" width="320" height="230" rx="12" fill="#eef2ff" stroke="#2b50d8" stroke-width="2" stroke-dasharray="6 4"/>
-      <text x="360" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1b2f7a">DeepResearch Platform</text>
+      <rect x="200" y="40" width="320" height="230" rx="12" fill="#eef0f4" stroke="#324a72" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="360" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#26344c">DeepResearch Platform</text>
       <rect x="225" y="80" width="120" height="46" rx="8" fill="#fff" stroke="#c4ccda"/><text x="285" y="100" text-anchor="middle" font-size="9.5" font-weight="600">React SPA</text><text x="285" y="115" text-anchor="middle" font-size="8" fill="#6b7685">UI / streaming</text>
       <rect x="375" y="80" width="120" height="46" rx="8" fill="#fff" stroke="#c4ccda"/><text x="435" y="100" text-anchor="middle" font-size="9.5" font-weight="600">Django API</text><text x="435" y="115" text-anchor="middle" font-size="8" fill="#6b7685">auth / persistence</text>
       <rect x="225" y="150" width="120" height="46" rx="8" fill="#fff" stroke="#c4ccda"/><text x="285" y="170" text-anchor="middle" font-size="9.5" font-weight="600">Kafka</text><text x="285" y="185" text-anchor="middle" font-size="8" fill="#6b7685">event backbone</text>
@@ -493,13 +494,13 @@
         <marker id="a2o" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#e8833a"/></marker>
       </defs>
       <!-- client -->
-      <rect x="20" y="150" width="120" height="60" rx="10" fill="#2b50d8"/>
+      <rect x="20" y="150" width="120" height="60" rx="10" fill="#324a72"/>
       <text x="80" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">React SPA</text>
-      <text x="80" y="194" text-anchor="middle" font-size="8" fill="#dbe3ff">Vite · SSE client</text>
+      <text x="80" y="194" text-anchor="middle" font-size="8" fill="#cdd2db">Vite · SSE client</text>
 
       <!-- api -->
-      <rect x="200" y="60" width="130" height="60" rx="10" fill="#fff" stroke="#2b50d8" stroke-width="2"/>
-      <text x="265" y="86" text-anchor="middle" font-size="11" font-weight="700" fill="#1b2f7a">Django + DRF</text>
+      <rect x="200" y="60" width="130" height="60" rx="10" fill="#fff" stroke="#324a72" stroke-width="2"/>
+      <text x="265" y="86" text-anchor="middle" font-size="11" font-weight="700" fill="#26344c">Django + DRF</text>
       <text x="265" y="102" text-anchor="middle" font-size="8" fill="#6b7685">auth · API · producer</text>
 
       <!-- redis -->
@@ -508,10 +509,10 @@
       <text x="265" y="277" text-anchor="middle" font-size="8" fill="#6b7685">SSE fan-out · cache</text>
 
       <!-- kafka -->
-      <rect x="380" y="150" width="120" height="70" rx="10" fill="#1b2f7a"/>
+      <rect x="380" y="150" width="120" height="70" rx="10" fill="#26344c"/>
       <text x="440" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">Apache Kafka</text>
-      <text x="440" y="194" text-anchor="middle" font-size="8" fill="#c7d2ff">jobs · events</text>
-      <text x="440" y="207" text-anchor="middle" font-size="7.5" fill="#9fb0ff">durable queue</text>
+      <text x="440" y="194" text-anchor="middle" font-size="8" fill="#cdd2db">jobs · events</text>
+      <text x="440" y="207" text-anchor="middle" font-size="7.5" fill="#aab2c0">durable queue</text>
 
       <!-- workers -->
       <rect x="556" y="58" width="150" height="64" rx="10" fill="#fff" stroke="#0fb5a6" stroke-width="2"/>
@@ -591,9 +592,9 @@
     <svg viewBox="0 0 720 350" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
       <defs><marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
       <!-- start -->
-      <ellipse cx="90" cy="40" rx="58" ry="22" fill="#2b50d8"/><text x="90" y="44" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Goal received</text>
+      <ellipse cx="90" cy="40" rx="58" ry="22" fill="#324a72"/><text x="90" y="44" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Goal received</text>
       <!-- plan -->
-      <rect x="35" y="95" width="110" height="44" rx="8" fill="#eef2ff" stroke="#2b50d8"/><text x="90" y="113" text-anchor="middle" font-size="9.5" font-weight="700">Plan</text><text x="90" y="127" text-anchor="middle" font-size="7.5" fill="#6b7685">decompose goal</text>
+      <rect x="35" y="95" width="110" height="44" rx="8" fill="#eef0f4" stroke="#324a72"/><text x="90" y="113" text-anchor="middle" font-size="9.5" font-weight="700">Plan</text><text x="90" y="127" text-anchor="middle" font-size="7.5" fill="#6b7685">decompose goal</text>
       <!-- decision -->
       <polygon points="90,175 160,210 90,245 20,210" fill="#fff3df" stroke="#e8833a"/><text x="90" y="208" text-anchor="middle" font-size="8.5" font-weight="700" fill="#9a5d12">Need more</text><text x="90" y="221" text-anchor="middle" font-size="8.5" font-weight="700" fill="#9a5d12">evidence?</text>
       <!-- act -->
@@ -605,7 +606,7 @@
       <!-- verify -->
       <rect x="560" y="188" width="130" height="44" rx="8" fill="#fde9e3" stroke="#b5421a"/><text x="625" y="206" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b5421a">Verify claims</text><text x="625" y="220" text-anchor="middle" font-size="7.5" fill="#b5421a">vs. sources</text>
       <!-- synth -->
-      <rect x="560" y="280" width="130" height="44" rx="8" fill="#1b2f7a"/><text x="625" y="298" text-anchor="middle" font-size="9.5" font-weight="700" fill="#fff">Synthesise report</text><text x="625" y="312" text-anchor="middle" font-size="7.5" fill="#c7d2ff">inline citations</text>
+      <rect x="560" y="280" width="130" height="44" rx="8" fill="#26344c"/><text x="625" y="298" text-anchor="middle" font-size="9.5" font-weight="700" fill="#fff">Synthesise report</text><text x="625" y="312" text-anchor="middle" font-size="7.5" fill="#cdd2db">inline citations</text>
       <!-- end -->
       <ellipse cx="290" cy="302" rx="62" ry="22" fill="#0fb5a6"/><text x="290" y="306" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Report delivered</text>
 
@@ -649,15 +650,15 @@
   <figure>
     <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
       <defs><marker id="a4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
-      <rect x="20" y="80" width="120" height="56" rx="9" fill="#fff" stroke="#2b50d8" stroke-width="2"/><text x="80" y="104" text-anchor="middle" font-size="10" font-weight="700" fill="#1b2f7a">Django API</text><text x="80" y="120" text-anchor="middle" font-size="8" fill="#6b7685">producer</text>
+      <rect x="20" y="80" width="120" height="56" rx="9" fill="#fff" stroke="#324a72" stroke-width="2"/><text x="80" y="104" text-anchor="middle" font-size="10" font-weight="700" fill="#26344c">Django API</text><text x="80" y="120" text-anchor="middle" font-size="8" fill="#6b7685">producer</text>
       <g>
-        <rect x="220" y="20" width="180" height="34" rx="6" fill="#1b2f7a"/><text x="310" y="42" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">research.jobs</text>
-        <rect x="220" y="93" width="180" height="34" rx="6" fill="#2b50d8"/><text x="310" y="115" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">research.events</text>
+        <rect x="220" y="20" width="180" height="34" rx="6" fill="#26344c"/><text x="310" y="42" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">research.jobs</text>
+        <rect x="220" y="93" width="180" height="34" rx="6" fill="#324a72"/><text x="310" y="115" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">research.events</text>
         <rect x="220" y="166" width="180" height="34" rx="6" fill="#0fb5a6"/><text x="310" y="188" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">research.results</text>
       </g>
       <rect x="470" y="20" width="160" height="50" rx="9" fill="#fff" stroke="#0fb5a6" stroke-width="2"/><text x="550" y="42" text-anchor="middle" font-size="10" font-weight="700" fill="#0a7d72">Agent Workers</text><text x="550" y="57" text-anchor="middle" font-size="8" fill="#6b7685">consumer group</text>
       <rect x="470" y="100" width="160" height="44" rx="9" fill="#fff" stroke="#e8833a" stroke-width="2"/><text x="550" y="120" text-anchor="middle" font-size="10" font-weight="700" fill="#b5421a">Stream Gateway</text><text x="550" y="134" text-anchor="middle" font-size="8" fill="#6b7685">→ Redis → SSE</text>
-      <rect x="470" y="166" width="160" height="40" rx="9" fill="#fff" stroke="#2b50d8" stroke-width="2"/><text x="550" y="190" text-anchor="middle" font-size="10" font-weight="700" fill="#1b2f7a">Django API</text>
+      <rect x="470" y="166" width="160" height="40" rx="9" fill="#fff" stroke="#324a72" stroke-width="2"/><text x="550" y="190" text-anchor="middle" font-size="10" font-weight="700" fill="#26344c">Django API</text>
 
       <line x1="140" y1="100" x2="218" y2="40" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a4)"/>
       <line x1="400" y1="37" x2="468" y2="45" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a4)"/>
@@ -679,10 +680,10 @@
   <figure>
     <svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
       <defs><marker id="a5" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
-      <text x="20" y="22" font-size="9" font-weight="700" fill="#1b2f7a">INGESTION (on upload)</text>
+      <text x="20" y="22" font-size="9" font-weight="700" fill="#26344c">INGESTION (on upload)</text>
       <rect x="20" y="32" width="92" height="40" rx="7" fill="#fff" stroke="#c4ccda"/><text x="66" y="50" text-anchor="middle" font-size="8.5" font-weight="600">Document</text><text x="66" y="63" text-anchor="middle" font-size="7.5" fill="#6b7685">PDF · txt</text>
       <rect x="140" y="32" width="92" height="40" rx="7" fill="#fff" stroke="#c4ccda"/><text x="186" y="50" text-anchor="middle" font-size="8.5" font-weight="600">Chunk</text><text x="186" y="63" text-anchor="middle" font-size="7.5" fill="#6b7685">overlap split</text>
-      <rect x="260" y="32" width="92" height="40" rx="7" fill="#eef2ff" stroke="#2b50d8"/><text x="306" y="50" text-anchor="middle" font-size="8.5" font-weight="600">Embed</text><text x="306" y="63" text-anchor="middle" font-size="7.5" fill="#6b7685">vector</text>
+      <rect x="260" y="32" width="92" height="40" rx="7" fill="#eef0f4" stroke="#324a72"/><text x="306" y="50" text-anchor="middle" font-size="8.5" font-weight="600">Embed</text><text x="306" y="63" text-anchor="middle" font-size="7.5" fill="#6b7685">vector</text>
       <rect x="380" y="32" width="100" height="40" rx="7" fill="#0fb5a6"/><text x="430" y="50" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Qdrant upsert</text><text x="430" y="63" text-anchor="middle" font-size="7.5" fill="#bfeee7">+ metadata</text>
       <line x1="112" y1="52" x2="138" y2="52" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
       <line x1="232" y1="52" x2="258" y2="52" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
@@ -690,10 +691,10 @@
 
       <text x="20" y="118" font-size="9" font-weight="700" fill="#0a7d72">RETRIEVAL (during a run)</text>
       <rect x="20" y="128" width="92" height="42" rx="7" fill="#fff" stroke="#c4ccda"/><text x="66" y="146" text-anchor="middle" font-size="8.5" font-weight="600">Sub-question</text><text x="66" y="160" text-anchor="middle" font-size="7.5" fill="#6b7685">from agent</text>
-      <rect x="140" y="128" width="92" height="42" rx="7" fill="#eef2ff" stroke="#2b50d8"/><text x="186" y="146" text-anchor="middle" font-size="8.5" font-weight="600">Embed query</text>
+      <rect x="140" y="128" width="92" height="42" rx="7" fill="#eef0f4" stroke="#324a72"/><text x="186" y="146" text-anchor="middle" font-size="8.5" font-weight="600">Embed query</text>
       <rect x="260" y="128" width="92" height="42" rx="7" fill="#0fb5a6"/><text x="306" y="146" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Top-k search</text><text x="306" y="160" text-anchor="middle" font-size="7.5" fill="#bfeee7">Qdrant</text>
       <rect x="380" y="128" width="92" height="42" rx="7" fill="#fff3df" stroke="#e8833a"/><text x="426" y="146" text-anchor="middle" font-size="8.5" font-weight="600" fill="#9a5d12">Re-rank</text><text x="426" y="160" text-anchor="middle" font-size="7.5" fill="#9a5d12">relevance</text>
-      <rect x="500" y="128" width="100" height="42" rx="7" fill="#1b2f7a"/><text x="550" y="146" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Grounded</text><text x="550" y="160" text-anchor="middle" font-size="7.5" fill="#c7d2ff">context → LLM</text>
+      <rect x="500" y="128" width="100" height="42" rx="7" fill="#26344c"/><text x="550" y="146" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Grounded</text><text x="550" y="160" text-anchor="middle" font-size="7.5" fill="#cdd2db">context → LLM</text>
       <rect x="628" y="128" width="74" height="42" rx="7" fill="#fff" stroke="#c4ccda"/><text x="665" y="150" text-anchor="middle" font-size="8.5" font-weight="600">Citation</text><text x="665" y="163" text-anchor="middle" font-size="7.5" fill="#6b7685">refs</text>
       <line x1="112" y1="149" x2="138" y2="149" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
       <line x1="232" y1="149" x2="258" y2="149" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
@@ -723,8 +724,8 @@
   <figure>
     <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
       <rect x="20" y="20" width="210" height="180" rx="8" fill="#fff" stroke="#c4ccda"/>
-      <rect x="20" y="20" width="210" height="26" rx="8" fill="#2b50d8"/><text x="34" y="37" font-size="9" font-weight="700" fill="#fff">Dashboard</text>
-      <rect x="34" y="58" width="182" height="26" rx="5" fill="#eef2ff" stroke="#2b50d8"/><text x="42" y="75" font-size="8" fill="#1b2f7a">Ask a research question…</text>
+      <rect x="20" y="20" width="210" height="26" rx="8" fill="#324a72"/><text x="34" y="37" font-size="9" font-weight="700" fill="#fff">Dashboard</text>
+      <rect x="34" y="58" width="182" height="26" rx="5" fill="#eef0f4" stroke="#324a72"/><text x="42" y="75" font-size="8" fill="#26344c">Ask a research question…</text>
       <rect x="34" y="92" width="56" height="16" rx="8" fill="#e6f6f3"/><text x="62" y="104" text-anchor="middle" font-size="7" fill="#0a7d72">Depth</text>
       <rect x="96" y="92" width="60" height="16" rx="8" fill="#fff3df"/><text x="126" y="104" text-anchor="middle" font-size="7" fill="#9a5d12">Docs</text>
       <line x1="34" y1="124" x2="216" y2="124" stroke="#e2e6ee"/><text x="34" y="140" font-size="7.5" fill="#6b7685">Recent runs</text>
@@ -732,19 +733,19 @@
 
       <rect x="245" y="20" width="210" height="180" rx="8" fill="#fff" stroke="#c4ccda"/>
       <rect x="245" y="20" width="210" height="26" rx="8" fill="#0fb5a6"/><text x="259" y="37" font-size="9" font-weight="700" fill="#fff">Run View — live</text>
-      <circle cx="266" cy="64" r="4" fill="#2b50d8"/><text x="278" y="67" font-size="7.5" fill="#1a2233">Planned 4 sub-questions</text>
+      <circle cx="266" cy="64" r="4" fill="#324a72"/><text x="278" y="67" font-size="7.5" fill="#1a2233">Planned 4 sub-questions</text>
       <circle cx="266" cy="84" r="4" fill="#0fb5a6"/><text x="278" y="87" font-size="7.5" fill="#1a2233">Searching the web…</text>
       <circle cx="266" cy="104" r="4" fill="#0fb5a6"/><text x="278" y="107" font-size="7.5" fill="#1a2233">Retrieved 6 chunks</text>
       <circle cx="266" cy="124" r="4" fill="#e8833a"/><text x="278" y="127" font-size="7.5" fill="#1a2233">Verifying claims…</text>
       <rect x="259" y="160" width="182" height="22" rx="6" fill="#f5f7fb"/><text x="268" y="174" font-size="7.5" fill="#6b7685">tokens 18.2k · $0.07 · cancel</text>
 
       <rect x="470" y="20" width="210" height="180" rx="8" fill="#fff" stroke="#c4ccda"/>
-      <rect x="470" y="20" width="210" height="26" rx="8" fill="#1b2f7a"/><text x="484" y="37" font-size="9" font-weight="700" fill="#fff">Report</text>
+      <rect x="470" y="20" width="210" height="26" rx="8" fill="#26344c"/><text x="484" y="37" font-size="9" font-weight="700" fill="#fff">Report</text>
       <rect x="484" y="56" width="150" height="9" rx="2" fill="#1a2233"/>
       <rect x="484" y="72" width="182" height="6" rx="2" fill="#e2e6ee"/><rect x="484" y="84" width="182" height="6" rx="2" fill="#e2e6ee"/><rect x="484" y="96" width="140" height="6" rx="2" fill="#e2e6ee"/>
-      <rect x="630" y="70" width="14" height="11" rx="3" fill="#eef2ff" stroke="#2b50d8"/><text x="637" y="79" text-anchor="middle" font-size="6.5" fill="#1b2f7a">1</text>
+      <rect x="630" y="70" width="14" height="11" rx="3" fill="#eef0f4" stroke="#324a72"/><text x="637" y="79" text-anchor="middle" font-size="6.5" fill="#26344c">1</text>
       <rect x="484" y="112" width="182" height="6" rx="2" fill="#e2e6ee"/><rect x="484" y="124" width="160" height="6" rx="2" fill="#e2e6ee"/>
-      <rect x="484" y="168" width="60" height="18" rx="9" fill="#2b50d8"/><text x="514" y="180" text-anchor="middle" font-size="7.5" fill="#fff">Export</text>
+      <rect x="484" y="168" width="60" height="18" rx="9" fill="#324a72"/><text x="514" y="180" text-anchor="middle" font-size="7.5" fill="#fff">Export</text>
     </svg>
     <figcaption><span class="fig-num">Figure 6.</span> Wireframes for the three principal screens.</figcaption>
   </figure>
@@ -882,9 +883,9 @@
     <svg viewBox="0 0 720 330" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
       <defs><marker id="a6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#3c4858"/></marker></defs>
       <!-- USER -->
-      <rect x="30" y="40" width="160" height="120" rx="6" fill="#fff" stroke="#2b50d8" stroke-width="1.6"/>
-      <rect x="30" y="40" width="160" height="24" rx="6" fill="#2b50d8"/><text x="110" y="57" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">User</text>
-      <text x="42" y="82" font-size="8"><tspan font-weight="700" fill="#1b2f7a">PK</tspan> id</text>
+      <rect x="30" y="40" width="160" height="120" rx="6" fill="#fff" stroke="#324a72" stroke-width="1.6"/>
+      <rect x="30" y="40" width="160" height="24" rx="6" fill="#324a72"/><text x="110" y="57" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">User</text>
+      <text x="42" y="82" font-size="8"><tspan font-weight="700" fill="#26344c">PK</tspan> id</text>
       <text x="42" y="98" font-size="8">email · unique</text>
       <text x="42" y="114" font-size="8">password_hash</text>
       <text x="42" y="130" font-size="8">created_at</text>
@@ -900,9 +901,9 @@
       <text x="292" y="142" font-size="8">created_at · ended_at</text>
       <text x="292" y="158" font-size="8">error</text>
       <!-- REPORT -->
-      <rect x="540" y="20" width="160" height="120" rx="6" fill="#fff" stroke="#1b2f7a" stroke-width="1.6"/>
-      <rect x="540" y="20" width="160" height="24" rx="6" fill="#1b2f7a"/><text x="620" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Report</text>
-      <text x="552" y="62" font-size="8"><tspan font-weight="700" fill="#1b2f7a">PK</tspan> id</text>
+      <rect x="540" y="20" width="160" height="120" rx="6" fill="#fff" stroke="#26344c" stroke-width="1.6"/>
+      <rect x="540" y="20" width="160" height="24" rx="6" fill="#26344c"/><text x="620" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Report</text>
+      <text x="552" y="62" font-size="8"><tspan font-weight="700" fill="#26344c">PK</tspan> id</text>
       <text x="552" y="78" font-size="8"><tspan font-weight="700" fill="#b5421a">FK</tspan> run_id · unique</text>
       <text x="552" y="94" font-size="8">summary</text>
       <text x="552" y="110" font-size="8">body (sections)</text>
@@ -918,7 +919,7 @@
       <!-- DOCUMENT -->
       <rect x="280" y="210" width="170" height="100" rx="6" fill="#fff" stroke="#6b7685" stroke-width="1.6"/>
       <rect x="280" y="210" width="170" height="24" rx="6" fill="#6b7685"/><text x="365" y="227" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Document</text>
-      <text x="292" y="252" font-size="8"><tspan font-weight="700" fill="#1b2f7a">PK</tspan> id</text>
+      <text x="292" y="252" font-size="8"><tspan font-weight="700" fill="#26344c">PK</tspan> id</text>
       <text x="292" y="268" font-size="8"><tspan font-weight="700" fill="#b5421a">FK</tspan> user_id</text>
       <text x="292" y="284" font-size="8">filename · status</text>
       <text x="292" y="300" font-size="8">chunk_count</text>
@@ -959,17 +960,17 @@
     <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
       <defs><marker id="a7" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
       <!-- actor researcher -->
-      <circle cx="60" cy="80" r="14" fill="#2b50d8"/><line x1="60" y1="94" x2="60" y2="124" stroke="#2b50d8" stroke-width="3"/><line x1="44" y1="106" x2="76" y2="106" stroke="#2b50d8" stroke-width="3"/><line x1="60" y1="124" x2="46" y2="146" stroke="#2b50d8" stroke-width="3"/><line x1="60" y1="124" x2="74" y2="146" stroke="#2b50d8" stroke-width="3"/>
+      <circle cx="60" cy="80" r="14" fill="#324a72"/><line x1="60" y1="94" x2="60" y2="124" stroke="#324a72" stroke-width="3"/><line x1="44" y1="106" x2="76" y2="106" stroke="#324a72" stroke-width="3"/><line x1="60" y1="124" x2="46" y2="146" stroke="#324a72" stroke-width="3"/><line x1="60" y1="124" x2="74" y2="146" stroke="#324a72" stroke-width="3"/>
       <text x="60" y="164" text-anchor="middle" font-size="9" font-weight="600">Researcher</text>
       <!-- actor admin -->
       <circle cx="60" cy="210" r="12" fill="#6b7685"/><line x1="60" y1="222" x2="60" y2="246" stroke="#6b7685" stroke-width="3"/><line x1="46" y1="232" x2="74" y2="232" stroke="#6b7685" stroke-width="3"/>
       <text x="60" y="262" text-anchor="middle" font-size="9" font-weight="600">Admin</text>
       <!-- boundary -->
       <rect x="160" y="20" width="400" height="230" rx="12" fill="#fafbff" stroke="#c4ccda" stroke-dasharray="5 4"/>
-      <ellipse cx="270" cy="55" rx="78" ry="22" fill="#eef2ff" stroke="#2b50d8"/><text x="270" y="59" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b2f7a">UC-1 Register / Login</text>
-      <ellipse cx="270" cy="110" rx="78" ry="22" fill="#eef2ff" stroke="#2b50d8"/><text x="270" y="114" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b2f7a">UC-2 Submit research</text>
-      <ellipse cx="270" cy="165" rx="78" ry="22" fill="#eef2ff" stroke="#2b50d8"/><text x="270" y="169" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b2f7a">UC-3 Watch progress</text>
-      <ellipse cx="270" cy="220" rx="78" ry="22" fill="#eef2ff" stroke="#2b50d8"/><text x="270" y="224" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b2f7a">UC-4 Upload documents</text>
+      <ellipse cx="270" cy="55" rx="78" ry="22" fill="#eef0f4" stroke="#324a72"/><text x="270" y="59" text-anchor="middle" font-size="8.5" font-weight="600" fill="#26344c">UC-1 Register / Login</text>
+      <ellipse cx="270" cy="110" rx="78" ry="22" fill="#eef0f4" stroke="#324a72"/><text x="270" y="114" text-anchor="middle" font-size="8.5" font-weight="600" fill="#26344c">UC-2 Submit research</text>
+      <ellipse cx="270" cy="165" rx="78" ry="22" fill="#eef0f4" stroke="#324a72"/><text x="270" y="169" text-anchor="middle" font-size="8.5" font-weight="600" fill="#26344c">UC-3 Watch progress</text>
+      <ellipse cx="270" cy="220" rx="78" ry="22" fill="#eef0f4" stroke="#324a72"/><text x="270" y="224" text-anchor="middle" font-size="8.5" font-weight="600" fill="#26344c">UC-4 Upload documents</text>
       <ellipse cx="460" cy="82" rx="78" ry="22" fill="#e6f6f3" stroke="#0fb5a6"/><text x="460" y="86" text-anchor="middle" font-size="8.5" font-weight="600" fill="#0a7d72">UC-5 View / export report</text>
       <ellipse cx="460" cy="150" rx="78" ry="22" fill="#fff3df" stroke="#e8833a"/><text x="460" y="154" text-anchor="middle" font-size="8.5" font-weight="600" fill="#9a5d12">UC-6 Manage history</text>
       <ellipse cx="460" cy="218" rx="78" ry="22" fill="#f1f3f6" stroke="#6b7685"/><text x="460" y="222" text-anchor="middle" font-size="8.5" font-weight="600" fill="#3c4858">UC-7 Monitor system</text>
@@ -1009,9 +1010,9 @@
       <defs><marker id="a8" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
       <!-- lifelines -->
       <g font-size="8.5" font-weight="700" fill="#fff">
-        <rect x="20" y="20" width="86" height="26" rx="5" fill="#2b50d8"/><text x="63" y="37" text-anchor="middle">Browser</text>
-        <rect x="160" y="20" width="86" height="26" rx="5" fill="#1b2f7a"/><text x="203" y="37" text-anchor="middle">Django API</text>
-        <rect x="300" y="20" width="86" height="26" rx="5" fill="#1b2f7a"/><text x="343" y="37" text-anchor="middle">Kafka</text>
+        <rect x="20" y="20" width="86" height="26" rx="5" fill="#324a72"/><text x="63" y="37" text-anchor="middle">Browser</text>
+        <rect x="160" y="20" width="86" height="26" rx="5" fill="#26344c"/><text x="203" y="37" text-anchor="middle">Django API</text>
+        <rect x="300" y="20" width="86" height="26" rx="5" fill="#26344c"/><text x="343" y="37" text-anchor="middle">Kafka</text>
         <rect x="440" y="20" width="86" height="26" rx="5" fill="#0fb5a6"/><text x="483" y="37" text-anchor="middle">Worker</text>
         <rect x="580" y="20" width="120" height="26" rx="5" fill="#0a7d72"/><text x="640" y="37" text-anchor="middle">Claude / Search</text>
       </g>
@@ -1026,12 +1027,12 @@
         <line x1="343" y1="146" x2="481" y2="146" stroke="#3c4858" stroke-width="1.3" marker-end="url(#a8)"/><text x="350" y="141">consume job</text>
         <line x1="483" y1="170" x2="638" y2="170" stroke="#0a7d72" stroke-width="1.3" marker-end="url(#a8)"/><text x="490" y="165" fill="#0a7d72">plan + tool calls</text>
         <line x1="638" y1="190" x2="485" y2="190" stroke="#0a7d72" stroke-width="1.3" marker-end="url(#a8)"/><text x="500" y="185" fill="#0a7d72">results</text>
-        <line x1="483" y1="214" x2="345" y2="214" stroke="#2b50d8" stroke-width="1.3" marker-end="url(#a8)"/><text x="352" y="209" fill="#1b2f7a">progress events</text>
-        <line x1="343" y1="234" x2="205" y2="234" stroke="#2b50d8" stroke-width="1.3" marker-end="url(#a8)"/>
+        <line x1="483" y1="214" x2="345" y2="214" stroke="#324a72" stroke-width="1.3" marker-end="url(#a8)"/><text x="352" y="209" fill="#26344c">progress events</text>
+        <line x1="343" y1="234" x2="205" y2="234" stroke="#324a72" stroke-width="1.3" marker-end="url(#a8)"/>
         <line x1="201" y1="254" x2="65" y2="254" stroke="#e8833a" stroke-width="1.3" marker-end="url(#a8)"/><text x="78" y="249" fill="#b5421a">SSE: step…</text>
         <text x="483" y="280" text-anchor="middle" fill="#6b7685">↻ loop until grounded</text>
-        <line x1="483" y1="300" x2="345" y2="300" stroke="#1b2f7a" stroke-width="1.3" marker-end="url(#a8)"/><text x="352" y="295" fill="#1b2f7a">produce result</text>
-        <line x1="343" y1="320" x2="205" y2="320" stroke="#1b2f7a" stroke-width="1.3" marker-end="url(#a8)"/>
+        <line x1="483" y1="300" x2="345" y2="300" stroke="#26344c" stroke-width="1.3" marker-end="url(#a8)"/><text x="352" y="295" fill="#26344c">produce result</text>
+        <line x1="343" y1="320" x2="205" y2="320" stroke="#26344c" stroke-width="1.3" marker-end="url(#a8)"/>
         <line x1="201" y1="340" x2="65" y2="340" stroke="#0fb5a6" stroke-width="1.3" marker-end="url(#a8)"/><text x="78" y="335" fill="#0a7d72">SSE: completed → report</text>
       </g>
     </svg>
@@ -1043,7 +1044,7 @@
     <svg viewBox="0 0 700 110" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
       <defs><marker id="a9" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
       <rect x="20" y="40" width="100" height="34" rx="17" fill="#6b7685"/><text x="70" y="61" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">QUEUED</text>
-      <rect x="180" y="40" width="100" height="34" rx="17" fill="#2b50d8"/><text x="230" y="61" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">RUNNING</text>
+      <rect x="180" y="40" width="100" height="34" rx="17" fill="#324a72"/><text x="230" y="61" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">RUNNING</text>
       <rect x="340" y="10" width="120" height="32" rx="16" fill="#0fb5a6"/><text x="400" y="30" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">COMPLETED</text>
       <rect x="340" y="72" width="120" height="32" rx="16" fill="#b5421a"/><text x="400" y="92" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">FAILED</text>
       <rect x="520" y="40" width="120" height="34" rx="17" fill="#e8833a"/><text x="580" y="61" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">CANCELLED</text>
@@ -1129,22 +1130,22 @@
 
   <figure>
     <svg viewBox="0 0 720 350" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
-      <rect x="14" y="14" width="692" height="322" rx="12" fill="#f7f9fc" stroke="#1b2f7a" stroke-width="1.5"/>
-      <text x="30" y="34" font-size="11" font-weight="800" fill="#1b2f7a">Kubernetes Cluster</text>
+      <rect x="14" y="14" width="692" height="322" rx="12" fill="#f7f9fc" stroke="#26344c" stroke-width="1.5"/>
+      <text x="30" y="34" font-size="11" font-weight="800" fill="#26344c">Kubernetes Cluster</text>
       <!-- ingress -->
-      <rect x="40" y="50" width="120" height="40" rx="8" fill="#2b50d8"/><text x="100" y="70" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">Ingress</text><text x="100" y="83" text-anchor="middle" font-size="7.5" fill="#cdd8ff">TLS · routing</text>
+      <rect x="40" y="50" width="120" height="40" rx="8" fill="#324a72"/><text x="100" y="70" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">Ingress</text><text x="100" y="83" text-anchor="middle" font-size="7.5" fill="#cdd2db">TLS · routing</text>
       <!-- stateless deployments -->
-      <rect x="40" y="120" width="300" height="90" rx="10" fill="#fff" stroke="#2b50d8" stroke-dasharray="4 3"/>
-      <text x="52" y="138" font-size="8.5" font-weight="700" fill="#1b2f7a">Stateless Deployments (HPA)</text>
-      <rect x="54" y="148" width="86" height="50" rx="7" fill="#eef2ff" stroke="#2b50d8"/><text x="97" y="168" text-anchor="middle" font-size="8" font-weight="700">Frontend</text><text x="97" y="182" text-anchor="middle" font-size="7" fill="#6b7685">×2</text>
-      <rect x="148" y="148" width="86" height="50" rx="7" fill="#eef2ff" stroke="#2b50d8"/><text x="191" y="168" text-anchor="middle" font-size="8" font-weight="700">API</text><text x="191" y="182" text-anchor="middle" font-size="7" fill="#6b7685">×3</text>
+      <rect x="40" y="120" width="300" height="90" rx="10" fill="#fff" stroke="#324a72" stroke-dasharray="4 3"/>
+      <text x="52" y="138" font-size="8.5" font-weight="700" fill="#26344c">Stateless Deployments (HPA)</text>
+      <rect x="54" y="148" width="86" height="50" rx="7" fill="#eef0f4" stroke="#324a72"/><text x="97" y="168" text-anchor="middle" font-size="8" font-weight="700">Frontend</text><text x="97" y="182" text-anchor="middle" font-size="7" fill="#6b7685">×2</text>
+      <rect x="148" y="148" width="86" height="50" rx="7" fill="#eef0f4" stroke="#324a72"/><text x="191" y="168" text-anchor="middle" font-size="8" font-weight="700">API</text><text x="191" y="182" text-anchor="middle" font-size="7" fill="#6b7685">×3</text>
       <rect x="242" y="148" width="86" height="50" rx="7" fill="#e6f6f3" stroke="#0fb5a6"/><text x="285" y="165" text-anchor="middle" font-size="8" font-weight="700" fill="#0a7d72">Worker</text><text x="285" y="178" text-anchor="middle" font-size="7" fill="#0a7d72">×N (autoscaled)</text><text x="285" y="190" text-anchor="middle" font-size="6.5" fill="#6b7685">on Kafka lag</text>
       <!-- stateful -->
       <rect x="380" y="120" width="316" height="200" rx="10" fill="#fff" stroke="#6b7685" stroke-dasharray="4 3"/>
       <text x="392" y="138" font-size="8.5" font-weight="700" fill="#3c4858">StatefulSets + PersistentVolumeClaims</text>
-      <rect x="394" y="148" width="140" height="44" rx="7" fill="#1b2f7a"/><text x="464" y="168" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Kafka</text><text x="464" y="182" text-anchor="middle" font-size="7" fill="#c7d2ff">PVC</text>
+      <rect x="394" y="148" width="140" height="44" rx="7" fill="#26344c"/><text x="464" y="168" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Kafka</text><text x="464" y="182" text-anchor="middle" font-size="7" fill="#cdd2db">PVC</text>
       <rect x="544" y="148" width="140" height="44" rx="7" fill="#0a7d72"/><text x="614" y="168" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Qdrant</text><text x="614" y="182" text-anchor="middle" font-size="7" fill="#bfeee7">PVC</text>
-      <rect x="394" y="206" width="140" height="44" rx="7" fill="#2b50d8"/><text x="464" y="226" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">PostgreSQL</text><text x="464" y="240" text-anchor="middle" font-size="7" fill="#cdd8ff">PVC</text>
+      <rect x="394" y="206" width="140" height="44" rx="7" fill="#324a72"/><text x="464" y="226" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">PostgreSQL</text><text x="464" y="240" text-anchor="middle" font-size="7" fill="#cdd2db">PVC</text>
       <rect x="544" y="206" width="140" height="44" rx="7" fill="#e8833a"/><text x="614" y="226" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Redis</text><text x="614" y="240" text-anchor="middle" font-size="7" fill="#ffe6cf">PVC</text>
       <rect x="394" y="264" width="290" height="44" rx="7" fill="#f1f3f6" stroke="#6b7685"/><text x="539" y="284" text-anchor="middle" font-size="8.5" font-weight="700" fill="#3c4858">Secrets · ConfigMaps · Service Accounts</text><text x="539" y="298" text-anchor="middle" font-size="7" fill="#6b7685">API keys, DB creds injected at runtime</text>
       <!-- HPA + observ -->
@@ -1182,12 +1183,12 @@
     <svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
       <defs><marker id="a10" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
       <g>
-        <rect x="14" y="50" width="92" height="48" rx="8" fill="#fff" stroke="#2b50d8"/><text x="60" y="70" text-anchor="middle" font-size="8.5" font-weight="700">Commit / PR</text><text x="60" y="84" text-anchor="middle" font-size="7" fill="#6b7685">push</text>
-        <rect x="130" y="50" width="92" height="48" rx="8" fill="#eef2ff" stroke="#2b50d8"/><text x="176" y="68" text-anchor="middle" font-size="8.5" font-weight="700">Lint + Test</text><text x="176" y="82" text-anchor="middle" font-size="7" fill="#6b7685">unit · integ · evals</text>
-        <rect x="246" y="50" width="92" height="48" rx="8" fill="#eef2ff" stroke="#2b50d8"/><text x="292" y="68" text-anchor="middle" font-size="8.5" font-weight="700">Build image</text><text x="292" y="82" text-anchor="middle" font-size="7" fill="#6b7685">multi-stage</text>
+        <rect x="14" y="50" width="92" height="48" rx="8" fill="#fff" stroke="#324a72"/><text x="60" y="70" text-anchor="middle" font-size="8.5" font-weight="700">Commit / PR</text><text x="60" y="84" text-anchor="middle" font-size="7" fill="#6b7685">push</text>
+        <rect x="130" y="50" width="92" height="48" rx="8" fill="#eef0f4" stroke="#324a72"/><text x="176" y="68" text-anchor="middle" font-size="8.5" font-weight="700">Lint + Test</text><text x="176" y="82" text-anchor="middle" font-size="7" fill="#6b7685">unit · integ · evals</text>
+        <rect x="246" y="50" width="92" height="48" rx="8" fill="#eef0f4" stroke="#324a72"/><text x="292" y="68" text-anchor="middle" font-size="8.5" font-weight="700">Build image</text><text x="292" y="82" text-anchor="middle" font-size="7" fill="#6b7685">multi-stage</text>
         <rect x="362" y="50" width="92" height="48" rx="8" fill="#fff3df" stroke="#e8833a"/><text x="408" y="68" text-anchor="middle" font-size="8.5" font-weight="700" fill="#9a5d12">Scan + Push</text><text x="408" y="82" text-anchor="middle" font-size="7" fill="#9a5d12">registry</text>
         <rect x="478" y="50" width="92" height="48" rx="8" fill="#e6f6f3" stroke="#0fb5a6"/><text x="524" y="68" text-anchor="middle" font-size="8.5" font-weight="700" fill="#0a7d72">Deploy staging</text><text x="524" y="82" text-anchor="middle" font-size="7" fill="#0a7d72">smoke test</text>
-        <rect x="594" y="50" width="110" height="48" rx="8" fill="#1b2f7a"/><text x="649" y="68" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Promote prod</text><text x="649" y="82" text-anchor="middle" font-size="7" fill="#c7d2ff">rolling update</text>
+        <rect x="594" y="50" width="110" height="48" rx="8" fill="#26344c"/><text x="649" y="68" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Promote prod</text><text x="649" y="82" text-anchor="middle" font-size="7" fill="#cdd2db">rolling update</text>
       </g>
       <g stroke="#3c4858" stroke-width="1.4">
         <line x1="106" y1="74" x2="128" y2="74" marker-end="url(#a10)"/>
