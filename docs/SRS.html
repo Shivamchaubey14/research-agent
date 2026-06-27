@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Software Requirements Specification — DeepResearch Agentic AI Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Source+Serif+4:ital,opt@0,8..60;1,8..60&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a2233; --ink-soft:#3c4858; --muted:#6b7685; --line:#e2e6ee;
+    --brand:#2b50d8; --brand-dark:#1b2f7a; --brand-soft:#eef2ff;
+    --accent:#0fb5a6; --warn:#e8833a; --bg:#ffffff; --page:#ffffff;
+    --code-bg:#f5f7fb;
+  }
+  *{box-sizing:border-box;}
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{
+    margin:0; background:#5a6172; color:var(--ink);
+    font-family:'Source Serif 4', Georgia, serif; font-size:10.6pt; line-height:1.62;
+  }
+  /* ---- page model ---- */
+  .page{
+    width:210mm; min-height:297mm; padding:24mm 22mm 20mm; margin:10mm auto;
+    background:var(--page); position:relative; box-shadow:0 6px 28px rgba(0,0,0,.28);
+    page-break-after:always; overflow:hidden;
+  }
+  @page{ size:A4; margin:16mm 0; }
+  @media print{
+    body{ background:#fff; }
+    .page{ margin:0 auto; box-shadow:none; width:auto; min-height:auto; padding:0 16mm; page-break-after:always; }
+  }
+  /* ---- typography ---- */
+  h1,h2,h3,h4,.ui{ font-family:'Inter',system-ui,sans-serif; color:var(--ink); }
+  h1{ font-size:21pt; font-weight:800; letter-spacing:-.4px; margin:0 0 6px; }
+  h2{ font-size:15.5pt; font-weight:700; margin:26px 0 8px; padding-bottom:6px;
+      border-bottom:2px solid var(--brand); color:var(--brand-dark); }
+  h3{ font-size:12.2pt; font-weight:700; margin:18px 0 4px; color:var(--ink); }
+  h4{ font-size:10.6pt; font-weight:700; margin:13px 0 2px; color:var(--ink-soft);
+      text-transform:uppercase; letter-spacing:.6px; }
+  p{ margin:7px 0; }
+  a{ color:var(--brand); text-decoration:none; }
+  strong{ color:var(--ink); font-weight:600; }
+  small{ color:var(--muted); }
+  ul,ol{ margin:7px 0 7px 4px; padding-left:20px; }
+  li{ margin:3px 0; }
+  code{ font-family:'JetBrains Mono',monospace; font-size:9pt; background:var(--code-bg);
+        padding:1px 5px; border-radius:4px; color:var(--brand-dark); }
+  pre{ font-family:'JetBrains Mono',monospace; font-size:8.6pt; line-height:1.5;
+       background:var(--code-bg); border:1px solid var(--line); border-left:3px solid var(--brand);
+       border-radius:6px; padding:12px 14px; overflow-x:auto; color:#26324a; }
+  /* ---- tables ---- */
+  table{ width:100%; border-collapse:collapse; margin:12px 0; font-family:'Inter',sans-serif;
+         font-size:9pt; }
+  th{ background:var(--brand-dark); color:#fff; text-align:left; padding:7px 9px; font-weight:600;
+      border:1px solid var(--brand-dark); }
+  td{ padding:6px 9px; border:1px solid var(--line); vertical-align:top; }
+  tr:nth-child(even) td{ background:#f7f9fc; }
+  .req-id{ font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--brand-dark);
+           white-space:nowrap; }
+  /* ---- components ---- */
+  .tag{ display:inline-block; font-family:'Inter',sans-serif; font-size:7.6pt; font-weight:700;
+        text-transform:uppercase; letter-spacing:.7px; padding:3px 9px; border-radius:30px; }
+  .tag.high{ background:#fde9e3; color:#b5421a; }
+  .tag.med{ background:#fff3df; color:#9a5d12; }
+  .tag.low{ background:#e6f6f3; color:#0a7d72; }
+  .callout{ border-radius:8px; padding:12px 16px; margin:14px 0; font-family:'Inter',sans-serif;
+            font-size:9.2pt; line-height:1.55; }
+  .callout.info{ background:var(--brand-soft); border-left:4px solid var(--brand); }
+  .callout.note{ background:#f3fbf9; border-left:4px solid var(--accent); }
+  .callout.warn{ background:#fdf3e9; border-left:4px solid var(--warn); }
+  .callout b{ font-weight:700; }
+  figure{ margin:18px 0; text-align:center; page-break-inside:avoid; }
+  figure svg{ max-width:100%; height:auto; }
+  figcaption{ font-family:'Inter',sans-serif; font-size:8.4pt; color:var(--muted); margin-top:8px;
+              font-weight:500; }
+  .fig-num{ color:var(--brand-dark); font-weight:700; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .card{ border:1px solid var(--line); border-radius:8px; padding:12px 14px; background:#fcfdff; }
+  .card h4{ margin-top:0; color:var(--brand-dark); }
+  .kpi{ font-family:'Inter',sans-serif; font-weight:800; font-size:16pt; color:var(--brand); }
+  /* ---- running header / footer ---- */
+  .runhead{ position:absolute; top:11mm; left:22mm; right:22mm; display:flex;
+            justify-content:space-between; font-family:'Inter',sans-serif; font-size:7.6pt;
+            color:var(--muted); border-bottom:1px solid var(--line); padding-bottom:5px; }
+  .runfoot{ position:absolute; bottom:10mm; left:22mm; right:22mm; display:flex;
+            justify-content:space-between; font-family:'Inter',sans-serif; font-size:7.6pt;
+            color:var(--muted); border-top:1px solid var(--line); padding-top:5px; }
+  .pageno::after{ counter-increment:pg; content:"Page " counter(pg); }
+  body{ counter-reset:pg; }
+  /* ---- cover ---- */
+  .cover{ padding:0; color:#fff; display:flex; flex-direction:column;
+          background:linear-gradient(150deg,#16225a 0%,#23379a 45%,#2b50d8 100%); }
+  .cover-band{ padding:30mm 22mm 0; flex:1; }
+  .cover .eyebrow{ font-family:'Inter',sans-serif; letter-spacing:4px; font-size:9pt;
+                   text-transform:uppercase; opacity:.8; font-weight:600; }
+  .cover h1{ color:#fff; font-size:38pt; line-height:1.05; margin:18px 0 10px; letter-spacing:-1px; }
+  .cover .sub{ font-family:'Inter',sans-serif; font-size:14pt; font-weight:300; opacity:.92;
+               max-width:135mm; }
+  .cover-meta{ background:rgba(255,255,255,.08); backdrop-filter:blur(2px);
+               padding:14mm 22mm; font-family:'Inter',sans-serif; }
+  .cover-meta table{ margin:0; }
+  .cover-meta th,.cover-meta td{ border:none; background:none; color:#fff; padding:5px 0; font-size:9.4pt; }
+  .cover-meta th{ width:38mm; opacity:.7; font-weight:500; }
+  .badges{ margin:22px 0 0; display:flex; gap:8px; flex-wrap:wrap; }
+  .badge{ font-family:'Inter',sans-serif; font-size:8pt; font-weight:600; letter-spacing:.5px;
+          background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
+          padding:5px 11px; border-radius:30px; }
+  /* TOC */
+  .toc-row{ display:flex; align-items:baseline; font-family:'Inter',sans-serif; font-size:9.6pt;
+            margin:5px 0; }
+  .toc-row .t{ font-weight:500; }
+  .toc-row .dots{ flex:1; border-bottom:1px dotted #c4ccda; margin:0 6px; transform:translateY(-3px); }
+  .toc-row.sub{ margin-left:16px; font-size:9pt; color:var(--ink-soft); }
+  .toc-row .n{ color:var(--brand-dark); font-weight:700; min-width:14mm; }
+  .lead{ font-family:'Inter',sans-serif; font-size:10.4pt; color:var(--ink-soft); line-height:1.6; }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<section class="page cover">
+  <div class="cover-band">
+    <div class="eyebrow">Software Requirements Specification</div>
+    <h1>DeepResearch</h1>
+    <div class="sub">An Agentic AI Research Assistant with Retrieval-Augmented Generation, Tool Use, and an Event-Driven Microservice Architecture</div>
+    <div class="badges">
+      <span class="badge">GenAI</span>
+      <span class="badge">Agentic AI</span>
+      <span class="badge">RAG</span>
+      <span class="badge">Django + DRF</span>
+      <span class="badge">React</span>
+      <span class="badge">Apache Kafka</span>
+      <span class="badge">Kubernetes</span>
+      <span class="badge">CI / CD</span>
+    </div>
+  </div>
+  <div class="cover-meta">
+    <table>
+      <tr><th>Document</th><td>Software Requirements Specification (SRS)</td></tr>
+      <tr><th>Standard</th><td>Aligned with IEEE&nbsp;830 / ISO&nbsp;IEC&nbsp;IEEE&nbsp;29148</td></tr>
+      <tr><th>Version</th><td>1.0</td></tr>
+      <tr><th>Status</th><td>Approved for Implementation</td></tr>
+      <tr><th>Date</th><td>27 June 2026</td></tr>
+      <tr><th>Classification</th><td>Engineering — Internal / Portfolio</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ REVISION HISTORY ============ -->
+<section class="page">
+  <div class="runhead"><span>DeepResearch — Software Requirements Specification</span><span>v1.0</span></div>
+
+  <h1>Document Control</h1>
+  <p class="lead">This Software Requirements Specification (SRS) defines the complete functional and
+  non-functional requirements for the <strong>DeepResearch</strong> platform — an end-to-end agentic
+  artificial-intelligence system that autonomously plans, researches, verifies and reports on
+  user-supplied questions. The document is the authoritative reference for design, implementation,
+  testing and acceptance.</p>
+
+  <h2>Revision History</h2>
+  <table>
+    <tr><th>Version</th><th>Date</th><th>Author</th><th>Description of Change</th></tr>
+    <tr><td>0.1</td><td>10 Jun 2026</td><td>Engineering</td><td>Initial draft — scope &amp; vision.</td></tr>
+    <tr><td>0.5</td><td>18 Jun 2026</td><td>Engineering</td><td>Architecture, data model and functional requirements added.</td></tr>
+    <tr><td>0.9</td><td>24 Jun 2026</td><td>Engineering</td><td>Non-functional requirements, deployment and test strategy added.</td></tr>
+    <tr><td><strong>1.0</strong></td><td>27 Jun 2026</td><td>Engineering</td><td>Baselined and approved for implementation.</td></tr>
+  </table>
+
+  <h2>Approvals</h2>
+  <table>
+    <tr><th>Role</th><th>Name</th><th>Responsibility</th><th>Signature / Date</th></tr>
+    <tr><td>Product Owner</td><td>—</td><td>Scope &amp; acceptance</td><td>&nbsp;</td></tr>
+    <tr><td>Lead Engineer</td><td>—</td><td>Technical design</td><td>&nbsp;</td></tr>
+    <tr><td>QA Lead</td><td>—</td><td>Verification &amp; validation</td><td>&nbsp;</td></tr>
+    <tr><td>DevOps Lead</td><td>—</td><td>Deployment &amp; operations</td><td>&nbsp;</td></tr>
+  </table>
+
+  <h2>Distribution</h2>
+  <p>Engineering team, QA, DevOps, and reviewing stakeholders. This document is maintained under
+  version control in the project repository at <code>docs/SRS.html</code> and changes follow the
+  pull-request review process.</p>
+
+  <div class="callout info"><b>How to read this document.</b> Requirements are uniquely identified.
+  Functional requirements use the form <code>FR-&lt;module&gt;-&lt;n&gt;</code>; non-functional
+  requirements use <code>NFR-&lt;category&gt;-&lt;n&gt;</code>. Each carries a priority of
+  <span class="tag high">High</span> <span class="tag med">Medium</span> or
+  <span class="tag low">Low</span>. Figures are numbered and may be cross-referenced.</p>
+
+  <div class="runfoot"><span>Document Control</span><span class="pageno"></span></div>
+</section>
+
+<!-- ============ TABLE OF CONTENTS ============ -->
+<section class="page">
+  <div class="runhead"><span>DeepResearch — Software Requirements Specification</span><span>v1.0</span></div>
+  <h1>Table of Contents</h1>
+
+  <div class="toc-row"><span class="n">1</span><span class="t">Introduction</span><span class="dots"></span><span>5</span></div>
+  <div class="toc-row sub"><span class="n">1.1</span><span class="t">Purpose</span><span class="dots"></span><span>5</span></div>
+  <div class="toc-row sub"><span class="n">1.2</span><span class="t">Document Conventions</span><span class="dots"></span><span>5</span></div>
+  <div class="toc-row sub"><span class="n">1.3</span><span class="t">Intended Audience</span><span class="dots"></span><span>5</span></div>
+  <div class="toc-row sub"><span class="n">1.4</span><span class="t">Product Scope</span><span class="dots"></span><span>6</span></div>
+  <div class="toc-row sub"><span class="n">1.5</span><span class="t">Definitions, Acronyms &amp; Abbreviations</span><span class="dots"></span><span>6</span></div>
+  <div class="toc-row sub"><span class="n">1.6</span><span class="t">References</span><span class="dots"></span><span>7</span></div>
+
+  <div class="toc-row"><span class="n">2</span><span class="t">Overall Description</span><span class="dots"></span><span>8</span></div>
+  <div class="toc-row sub"><span class="n">2.1</span><span class="t">Product Perspective</span><span class="dots"></span><span>8</span></div>
+  <div class="toc-row sub"><span class="n">2.2</span><span class="t">Product Functions</span><span class="dots"></span><span>9</span></div>
+  <div class="toc-row sub"><span class="n">2.3</span><span class="t">User Classes &amp; Characteristics</span><span class="dots"></span><span>10</span></div>
+  <div class="toc-row sub"><span class="n">2.4</span><span class="t">Operating Environment</span><span class="dots"></span><span>10</span></div>
+  <div class="toc-row sub"><span class="n">2.5</span><span class="t">Design &amp; Implementation Constraints</span><span class="dots"></span><span>11</span></div>
+  <div class="toc-row sub"><span class="n">2.6</span><span class="t">Assumptions &amp; Dependencies</span><span class="dots"></span><span>11</span></div>
+
+  <div class="toc-row"><span class="n">3</span><span class="t">System Architecture</span><span class="dots"></span><span>12</span></div>
+  <div class="toc-row sub"><span class="n">3.1</span><span class="t">Architectural Overview</span><span class="dots"></span><span>12</span></div>
+  <div class="toc-row sub"><span class="n">3.2</span><span class="t">Component Architecture</span><span class="dots"></span><span>13</span></div>
+  <div class="toc-row sub"><span class="n">3.3</span><span class="t">The Agentic Reasoning Loop</span><span class="dots"></span><span>14</span></div>
+  <div class="toc-row sub"><span class="n">3.4</span><span class="t">Event-Driven Messaging Model</span><span class="dots"></span><span>15</span></div>
+  <div class="toc-row sub"><span class="n">3.5</span><span class="t">Retrieval-Augmented Generation Pipeline</span><span class="dots"></span><span>16</span></div>
+
+  <div class="toc-row"><span class="n">4</span><span class="t">External Interface Requirements</span><span class="dots"></span><span>17</span></div>
+  <div class="toc-row sub"><span class="n">4.1</span><span class="t">User Interfaces</span><span class="dots"></span><span>17</span></div>
+  <div class="toc-row sub"><span class="n">4.2</span><span class="t">Software &amp; API Interfaces</span><span class="dots"></span><span>18</span></div>
+  <div class="toc-row sub"><span class="n">4.3</span><span class="t">Communication Interfaces</span><span class="dots"></span><span>19</span></div>
+
+  <div class="toc-row"><span class="n">5</span><span class="t">Functional Requirements</span><span class="dots"></span><span>20</span></div>
+  <div class="toc-row sub"><span class="n">5.1–5.7</span><span class="t">By module (Auth, Research, Agent, RAG, Streaming, Reports, Admin)</span><span class="dots"></span><span>20</span></div>
+
+  <div class="toc-row"><span class="n">6</span><span class="t">Data Requirements &amp; Database Design</span><span class="dots"></span><span>30</span></div>
+  <div class="toc-row"><span class="n">7</span><span class="t">Use Cases &amp; Behavioural Models</span><span class="dots"></span><span>33</span></div>
+  <div class="toc-row"><span class="n">8</span><span class="t">Non-Functional Requirements</span><span class="dots"></span><span>37</span></div>
+  <div class="toc-row"><span class="n">9</span><span class="t">Deployment &amp; Infrastructure</span><span class="dots"></span><span>42</span></div>
+  <div class="toc-row"><span class="n">10</span><span class="t">CI/CD &amp; DevOps</span><span class="dots"></span><span>45</span></div>
+  <div class="toc-row"><span class="n">11</span><span class="t">Quality Assurance &amp; Evaluation</span><span class="dots"></span><span>47</span></div>
+  <div class="toc-row"><span class="n">12</span><span class="t">Appendices</span><span class="dots"></span><span>49</span></div>
+
+  <div class="runfoot"><span>Table of Contents</span><span class="pageno"></span></div>
+</section>
+<!-- ============ 1. INTRODUCTION ============ -->
+<section class="page">
+  <div class="runhead"><span>1 — Introduction</span><span>DeepResearch SRS v1.0</span></div>
+
+  <h1>1&nbsp;&nbsp;Introduction</h1>
+
+  <h2>1.1&nbsp;&nbsp;Purpose</h2>
+  <p>This document specifies the requirements for <strong>DeepResearch</strong>, an agentic artificial
+  intelligence platform that automates the end-to-end research workflow. Given a natural-language
+  question, the system autonomously decomposes the problem, gathers evidence from the public web and
+  from a private document corpus, critically verifies the gathered evidence against its sources, and
+  composes a structured, citation-backed report. The purpose of this SRS is to establish a single,
+  unambiguous and verifiable baseline of <em>what</em> the system shall do and the quality attributes it
+  shall exhibit, so that engineering, quality assurance and operations teams share a common
+  understanding and can independently validate the delivered product.</p>
+
+  <h2>1.2&nbsp;&nbsp;Document Conventions</h2>
+  <p>The key words <strong>shall</strong>, <strong>should</strong> and <strong>may</strong> are used in
+  the sense defined by RFC&nbsp;2119: <em>shall</em> denotes a mandatory requirement, <em>should</em> a
+  recommendation, and <em>may</em> an optional capability. Requirement identifiers are stable and must
+  not be reused if a requirement is retired.</p>
+  <table>
+    <tr><th>Convention</th><th>Meaning</th><th>Example</th></tr>
+    <tr><td class="req-id">FR-xxx-n</td><td>Functional requirement, grouped by module</td><td><code>FR-AGT-3</code></td></tr>
+    <tr><td class="req-id">NFR-xxx-n</td><td>Non-functional requirement, grouped by quality attribute</td><td><code>NFR-PERF-2</code></td></tr>
+    <tr><td class="req-id">UC-n</td><td>Use case</td><td><code>UC-2</code></td></tr>
+    <tr><td><span class="tag high">High</span></td><td>Must be delivered for the product to be acceptable</td><td>—</td></tr>
+    <tr><td><span class="tag med">Medium</span></td><td>Important; may be deferred to a later iteration</td><td>—</td></tr>
+    <tr><td><span class="tag low">Low</span></td><td>Desirable enhancement</td><td>—</td></tr>
+  </table>
+
+  <h2>1.3&nbsp;&nbsp;Intended Audience</h2>
+  <p>This specification is written for the following readers, each of whom is expected to consult the
+  sections most relevant to their role:</p>
+  <ul>
+    <li><strong>Software Engineers</strong> — Sections 3–7 for architecture, interfaces, functional and data requirements that drive implementation.</li>
+    <li><strong>Quality Assurance Engineers</strong> — Sections 5, 8 and 11 to derive test cases and acceptance criteria.</li>
+    <li><strong>DevOps / Platform Engineers</strong> — Sections 9 and 10 for deployment topology, scaling and the delivery pipeline.</li>
+    <li><strong>Product Owner &amp; Reviewers</strong> — Sections 1, 2 and 7 for scope, vision and behavioural expectations.</li>
+    <li><strong>Hiring Managers / Technical Evaluators</strong> — the document as a whole demonstrates production-grade engineering rigour applied to a modern GenAI system.</li>
+  </ul>
+
+  <h2>1.4&nbsp;&nbsp;Product Scope</h2>
+  <p>DeepResearch delivers a web application in which an authenticated user submits a research question
+  and receives, in return, a streamed, transparent account of the agent's reasoning followed by a
+  final cited report that can be saved, revisited and exported. The platform is deliberately built as a
+  set of cooperating microservices connected by an event backbone, so that the computationally heavy
+  and long-running agent workload scales independently of the web tier.</p>
+  <div class="grid2">
+    <div class="card"><h4>In Scope</h4>
+      <ul>
+        <li>Autonomous multi-step research with tool use</li>
+        <li>RAG over user-uploaded documents</li>
+        <li>Live streaming of agent progress</li>
+        <li>Source verification and inline citations</li>
+        <li>Persisted, browsable report history</li>
+        <li>JWT-secured multi-user access</li>
+        <li>Containerised, Kubernetes-deployable services</li>
+        <li>Automated CI/CD and an offline evaluation suite</li>
+      </ul>
+    </div>
+    <div class="card"><h4>Out of Scope (v1.0)</h4>
+      <ul>
+        <li>Real-time collaborative editing of reports</li>
+        <li>Fine-tuning or self-hosting of foundation models</li>
+        <li>Mobile-native applications</li>
+        <li>Payment / billing and subscription management</li>
+        <li>Multi-tenant organisation hierarchies</li>
+        <li>Languages other than English (planned, not committed)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="runfoot"><span>1 — Introduction</span><span class="pageno"></span></div>
+</section>
+
+<section class="page">
+  <div class="runhead"><span>1 — Introduction</span><span>DeepResearch SRS v1.0</span></div>
+
+  <h2>1.5&nbsp;&nbsp;Definitions, Acronyms &amp; Abbreviations</h2>
+  <table>
+    <tr><th style="width:30mm">Term</th><th>Definition</th></tr>
+    <tr><td><strong>Agent</strong></td><td>An LLM-driven control loop that autonomously decides which tools to invoke, in what order, to accomplish a goal — as opposed to a single prompt/response exchange.</td></tr>
+    <tr><td><strong>Agentic AI</strong></td><td>A system design in which the model plans, acts via tools, observes results and iterates until a stopping condition is met.</td></tr>
+    <tr><td><strong>RAG</strong></td><td>Retrieval-Augmented Generation — grounding model output in documents retrieved from an external knowledge store at inference time.</td></tr>
+    <tr><td><strong>Embedding</strong></td><td>A dense numeric vector representing the semantic meaning of a chunk of text, enabling similarity search.</td></tr>
+    <tr><td><strong>Vector Store</strong></td><td>A database (Qdrant) optimised for nearest-neighbour search over embeddings.</td></tr>
+    <tr><td><strong>Chunk</strong></td><td>A bounded segment of a source document, the unit of indexing and retrieval.</td></tr>
+    <tr><td><strong>Tool Use</strong></td><td>The mechanism by which the model requests execution of an external function (web search, document retrieval) and receives the result.</td></tr>
+    <tr><td><strong>Producer / Consumer</strong></td><td>Kafka roles: a producer publishes events to a topic; a consumer subscribes and processes them.</td></tr>
+    <tr><td><strong>SSE</strong></td><td>Server-Sent Events — a unidirectional HTTP streaming channel used to push agent progress to the browser.</td></tr>
+    <tr><td><strong>JWT</strong></td><td>JSON Web Token — a signed, stateless credential used for authentication.</td></tr>
+    <tr><td><strong>DRF</strong></td><td>Django REST Framework — the toolkit used to build the HTTP API.</td></tr>
+    <tr><td><strong>Run</strong></td><td>A single end-to-end execution of the research agent for one question.</td></tr>
+    <tr><td><strong>Hallucination</strong></td><td>A model output that is fluent but unsupported by, or contradicted by, the available evidence.</td></tr>
+    <tr><td><strong>Eval</strong></td><td>An automated, repeatable test that scores the quality of agent output against expectations.</td></tr>
+  </table>
+
+  <h2>1.6&nbsp;&nbsp;References</h2>
+  <ol>
+    <li>IEEE Std 830-1998 — Recommended Practice for Software Requirements Specifications.</li>
+    <li>ISO/IEC/IEEE 29148:2018 — Requirements engineering.</li>
+    <li>RFC 2119 — Key words for use in RFCs to Indicate Requirement Levels.</li>
+    <li>Anthropic — Claude API &amp; Tool Use documentation.</li>
+    <li>Django 5.0 and Django REST Framework official documentation.</li>
+    <li>Apache Kafka documentation (KRaft mode).</li>
+    <li>Qdrant vector database documentation.</li>
+    <li>Kubernetes documentation — Deployments, HorizontalPodAutoscaler, Services.</li>
+    <li>OWASP Application Security Verification Standard (ASVS) 4.0.</li>
+  </ol>
+
+  <div class="callout note"><b>Project framing.</b> DeepResearch is engineered as a portfolio-grade
+  reference implementation. Every technology in the stack — agent orchestration, event-driven
+  messaging, vector retrieval, container orchestration and automated delivery — is included because it
+  plays a justified role in the architecture, not merely for breadth.</div>
+
+  <div class="runfoot"><span>1 — Introduction</span><span class="pageno"></span></div>
+</section>
+
+<!-- ============ 2. OVERALL DESCRIPTION ============ -->
+<section class="page">
+  <div class="runhead"><span>2 — Overall Description</span><span>DeepResearch SRS v1.0</span></div>
+
+  <h1>2&nbsp;&nbsp;Overall Description</h1>
+
+  <h2>2.1&nbsp;&nbsp;Product Perspective</h2>
+  <p>DeepResearch is a new, self-contained product rather than a component of a larger system. It is,
+  however, deliberately decomposed into independently deployable services that communicate through
+  well-defined contracts. The web tier (Django + DRF) owns identity, persistence and request
+  admission; the worker tier owns the long-running agentic computation; Apache Kafka decouples the two
+  so that a burst of submitted research questions is absorbed as a durable queue rather than
+  overwhelming synchronous request handlers. Figure&nbsp;1 situates the product and its actors.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs>
+        <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/>
+        </marker>
+      </defs>
+      <!-- actors -->
+      <circle cx="70" cy="90" r="16" fill="#2b50d8"/><line x1="70" y1="106" x2="70" y2="140" stroke="#2b50d8" stroke-width="3"/>
+      <line x1="50" y1="120" x2="90" y2="120" stroke="#2b50d8" stroke-width="3"/>
+      <line x1="70" y1="140" x2="54" y2="165" stroke="#2b50d8" stroke-width="3"/><line x1="70" y1="140" x2="86" y2="165" stroke="#2b50d8" stroke-width="3"/>
+      <text x="70" y="185" text-anchor="middle" font-size="11" font-weight="600" fill="#1a2233">Researcher</text>
+      <text x="70" y="199" text-anchor="middle" font-size="9" fill="#6b7685">(end user)</text>
+
+      <circle cx="70" cy="240" r="13" fill="#6b7685"/><line x1="70" y1="253" x2="70" y2="278" stroke="#6b7685" stroke-width="3"/>
+      <line x1="54" y1="265" x2="86" y2="265" stroke="#6b7685" stroke-width="3"/>
+      <text x="70" y="296" text-anchor="middle" font-size="9" fill="#6b7685">Administrator</text>
+
+      <!-- system boundary -->
+      <rect x="200" y="40" width="320" height="230" rx="12" fill="#eef2ff" stroke="#2b50d8" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="360" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1b2f7a">DeepResearch Platform</text>
+      <rect x="225" y="80" width="120" height="46" rx="8" fill="#fff" stroke="#c4ccda"/><text x="285" y="100" text-anchor="middle" font-size="9.5" font-weight="600">React SPA</text><text x="285" y="115" text-anchor="middle" font-size="8" fill="#6b7685">UI / streaming</text>
+      <rect x="375" y="80" width="120" height="46" rx="8" fill="#fff" stroke="#c4ccda"/><text x="435" y="100" text-anchor="middle" font-size="9.5" font-weight="600">Django API</text><text x="435" y="115" text-anchor="middle" font-size="8" fill="#6b7685">auth / persistence</text>
+      <rect x="225" y="150" width="120" height="46" rx="8" fill="#fff" stroke="#c4ccda"/><text x="285" y="170" text-anchor="middle" font-size="9.5" font-weight="600">Kafka</text><text x="285" y="185" text-anchor="middle" font-size="8" fill="#6b7685">event backbone</text>
+      <rect x="375" y="150" width="120" height="46" rx="8" fill="#fff" stroke="#c4ccda"/><text x="435" y="170" text-anchor="middle" font-size="9.5" font-weight="600">Agent Worker</text><text x="435" y="185" text-anchor="middle" font-size="8" fill="#6b7685">reasoning loop</text>
+      <rect x="300" y="218" width="120" height="40" rx="8" fill="#fff" stroke="#c4ccda"/><text x="360" y="242" text-anchor="middle" font-size="9.5" font-weight="600">Postgres · Qdrant · Redis</text>
+
+      <!-- external -->
+      <rect x="585" y="80" width="110" height="46" rx="8" fill="#e6f6f3" stroke="#0fb5a6"/><text x="640" y="100" text-anchor="middle" font-size="9.5" font-weight="600" fill="#0a7d72">Claude API</text><text x="640" y="115" text-anchor="middle" font-size="8" fill="#0a7d72">LLM reasoning</text>
+      <rect x="585" y="150" width="110" height="46" rx="8" fill="#e6f6f3" stroke="#0fb5a6"/><text x="640" y="170" text-anchor="middle" font-size="9.5" font-weight="600" fill="#0a7d72">Web Search</text><text x="640" y="185" text-anchor="middle" font-size="8" fill="#0a7d72">evidence</text>
+
+      <!-- links -->
+      <line x1="90" y1="103" x2="223" y2="103" stroke="#3c4858" stroke-width="1.5" marker-end="url(#ar)"/>
+      <line x1="86" y1="240" x2="375" y2="125" stroke="#6b7685" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+      <line x1="497" y1="103" x2="583" y2="103" stroke="#0a7d72" stroke-width="1.5" marker-end="url(#ar)"/>
+      <line x1="497" y1="173" x2="583" y2="173" stroke="#0a7d72" stroke-width="1.5" marker-end="url(#ar)"/>
+    </svg>
+    <figcaption><span class="fig-num">Figure 1.</span> System context — actors, the platform boundary and external services.</figcaption>
+  </figure>
+
+  <div class="runfoot"><span>2 — Overall Description</span><span class="pageno"></span></div>
+</section>
+
+<section class="page">
+  <div class="runhead"><span>2 — Overall Description</span><span>DeepResearch SRS v1.0</span></div>
+
+  <h2>2.2&nbsp;&nbsp;Product Functions</h2>
+  <p>At a high level the platform shall provide the following capabilities. Each is elaborated into
+  testable functional requirements in Section&nbsp;5.</p>
+  <table>
+    <tr><th style="width:42mm">Function</th><th>Summary</th></tr>
+    <tr><td><strong>Account &amp; Access</strong></td><td>Register, authenticate via JWT, manage session and profile.</td></tr>
+    <tr><td><strong>Submit Research</strong></td><td>Pose a question, optionally constrained by depth, focus or attached documents.</td></tr>
+    <tr><td><strong>Autonomous Investigation</strong></td><td>The agent plans sub-questions, searches the web and corpus, and iterates.</td></tr>
+    <tr><td><strong>Evidence Verification</strong></td><td>Claims are checked against retrieved sources; weak claims are flagged or dropped.</td></tr>
+    <tr><td><strong>Live Progress Streaming</strong></td><td>Every plan, search and decision is streamed to the UI as it happens.</td></tr>
+    <tr><td><strong>Cited Reporting</strong></td><td>A structured report is produced with inline, resolvable citations.</td></tr>
+    <tr><td><strong>Document Knowledge (RAG)</strong></td><td>Users upload documents that are chunked, embedded and made retrievable.</td></tr>
+    <tr><td><strong>History &amp; Export</strong></td><td>Past runs are persisted, browsable, re-openable and exportable.</td></tr>
+    <tr><td><strong>Administration</strong></td><td>Operators monitor runs, usage and system health.</td></tr>
+  </table>
+
+  <h2>2.3&nbsp;&nbsp;User Classes &amp; Characteristics</h2>
+  <table>
+    <tr><th>User Class</th><th>Description</th><th>Technical Skill</th><th>Frequency</th></tr>
+    <tr><td><strong>Researcher</strong></td><td>Primary user submitting questions and consuming reports.</td><td>Low–Medium</td><td>Daily</td></tr>
+    <tr><td><strong>Power User</strong></td><td>Uploads large corpora, tunes depth, exports for downstream use.</td><td>Medium–High</td><td>Daily</td></tr>
+    <tr><td><strong>Administrator</strong></td><td>Manages users, observes health, investigates failures.</td><td>High</td><td>Weekly</td></tr>
+    <tr><td><strong>Evaluator</strong></td><td>Reviews the engineering for hiring or audit purposes.</td><td>High</td><td>Occasional</td></tr>
+  </table>
+
+  <h2>2.4&nbsp;&nbsp;Operating Environment</h2>
+  <ul>
+    <li><strong>Client:</strong> Any evergreen desktop browser (Chrome, Edge, Firefox, Safari) supporting ES2020 and Server-Sent Events.</li>
+    <li><strong>Server:</strong> Linux containers orchestrated by Kubernetes 1.28+, or a single host via Docker Compose for development.</li>
+    <li><strong>Runtime:</strong> Python 3.12 (API &amp; worker), Node 20 build toolchain (frontend).</li>
+    <li><strong>Data services:</strong> PostgreSQL 16, Redis 7, Qdrant, Apache Kafka 3.7 (KRaft).</li>
+    <li><strong>External:</strong> Anthropic Claude API; a web-search provider.</li>
+  </ul>
+
+  <h2>2.5&nbsp;&nbsp;Design &amp; Implementation Constraints</h2>
+  <ul>
+    <li>The API shall be implemented with Django + DRF; the SPA with React (Vite).</li>
+    <li>Inter-service asynchronous communication shall use Kafka topics with explicit, versioned event schemas.</li>
+    <li>All services shall be stateless where possible and horizontally scalable; durable state lives only in Postgres, Qdrant and Redis.</li>
+    <li>Secrets shall never be committed; they are injected via environment variables / Kubernetes Secrets.</li>
+    <li>LLM access shall be confined to the worker tier to centralise cost control and prompt governance.</li>
+    <li>The system shall degrade gracefully when an external dependency (LLM or search) is slow or unavailable.</li>
+  </ul>
+
+  <h2>2.6&nbsp;&nbsp;Assumptions &amp; Dependencies</h2>
+  <ul>
+    <li>A valid Anthropic API key with sufficient quota is available to the worker tier.</li>
+    <li>The web-search provider's terms permit programmatic access at the expected volume.</li>
+    <li>Users have network connectivity adequate for an SSE stream.</li>
+    <li>The deployment target provides persistent volumes for stateful services.</li>
+    <li>Foundation-model behaviour may evolve; prompts and evals are versioned to absorb change.</li>
+  </ul>
+
+  <div class="runfoot"><span>2 — Overall Description</span><span class="pageno"></span></div>
+</section>
+<!-- ============ 3. SYSTEM ARCHITECTURE ============ -->
+<section class="page">
+  <div class="runhead"><span>3 — System Architecture</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>3&nbsp;&nbsp;System Architecture</h1>
+
+  <h2>3.1&nbsp;&nbsp;Architectural Overview</h2>
+  <p>DeepResearch follows an <strong>event-driven microservice architecture</strong>. The React SPA
+  talks only to the Django API over HTTP and consumes a one-way Server-Sent Events stream for live
+  progress. When a research run is requested, the API persists it, publishes a job event to Kafka and
+  returns immediately — the request is never blocked on the multi-minute agent computation. One or more
+  worker replicas consume jobs, execute the agentic loop against the Claude API and the search and
+  retrieval tools, and publish progress and result events back through Kafka and Redis. Figure&nbsp;2
+  shows the full topology and the path of a single request.</p>
+
+  <figure>
+    <svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs>
+        <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker>
+        <marker id="a2g" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#0a7d72"/></marker>
+        <marker id="a2o" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#e8833a"/></marker>
+      </defs>
+      <!-- client -->
+      <rect x="20" y="150" width="120" height="60" rx="10" fill="#2b50d8"/>
+      <text x="80" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">React SPA</text>
+      <text x="80" y="194" text-anchor="middle" font-size="8" fill="#dbe3ff">Vite · SSE client</text>
+
+      <!-- api -->
+      <rect x="200" y="60" width="130" height="60" rx="10" fill="#fff" stroke="#2b50d8" stroke-width="2"/>
+      <text x="265" y="86" text-anchor="middle" font-size="11" font-weight="700" fill="#1b2f7a">Django + DRF</text>
+      <text x="265" y="102" text-anchor="middle" font-size="8" fill="#6b7685">auth · API · producer</text>
+
+      <!-- redis -->
+      <rect x="200" y="240" width="130" height="50" rx="10" fill="#fff" stroke="#e8833a" stroke-width="2"/>
+      <text x="265" y="262" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b5421a">Redis</text>
+      <text x="265" y="277" text-anchor="middle" font-size="8" fill="#6b7685">SSE fan-out · cache</text>
+
+      <!-- kafka -->
+      <rect x="380" y="150" width="120" height="70" rx="10" fill="#1b2f7a"/>
+      <text x="440" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">Apache Kafka</text>
+      <text x="440" y="194" text-anchor="middle" font-size="8" fill="#c7d2ff">jobs · events</text>
+      <text x="440" y="207" text-anchor="middle" font-size="7.5" fill="#9fb0ff">durable queue</text>
+
+      <!-- workers -->
+      <rect x="556" y="58" width="150" height="64" rx="10" fill="#fff" stroke="#0fb5a6" stroke-width="2"/>
+      <rect x="548" y="66" width="150" height="64" rx="10" fill="#fff" stroke="#0fb5a6" stroke-width="2"/>
+      <rect x="540" y="74" width="150" height="64" rx="10" fill="#fff" stroke="#0fb5a6" stroke-width="2"/>
+      <text x="615" y="100" text-anchor="middle" font-size="11" font-weight="700" fill="#0a7d72">Agent Workers</text>
+      <text x="615" y="116" text-anchor="middle" font-size="8" fill="#6b7685">consumer group · N replicas</text>
+
+      <!-- data -->
+      <rect x="380" y="270" width="120" height="50" rx="10" fill="#fff" stroke="#c4ccda"/>
+      <text x="440" y="290" text-anchor="middle" font-size="10" font-weight="700">PostgreSQL</text>
+      <text x="440" y="305" text-anchor="middle" font-size="8" fill="#6b7685">runs · users · reports</text>
+      <rect x="540" y="270" width="120" height="50" rx="10" fill="#fff" stroke="#c4ccda"/>
+      <text x="600" y="290" text-anchor="middle" font-size="10" font-weight="700">Qdrant</text>
+      <text x="600" y="305" text-anchor="middle" font-size="8" fill="#6b7685">vector store (RAG)</text>
+
+      <!-- external -->
+      <rect x="556" y="170" width="150" height="40" rx="8" fill="#e6f6f3" stroke="#0fb5a6"/>
+      <text x="631" y="194" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0a7d72">Claude API · Web Search</text>
+
+      <!-- arrows -->
+      <line x1="140" y1="170" x2="198" y2="100" stroke="#3c4858" stroke-width="1.6" marker-end="url(#a2)"/>
+      <text x="150" y="128" font-size="7.5" fill="#3c4858">HTTPS</text>
+      <line x1="265" y1="120" x2="265" y2="238" stroke="#e8833a" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#a2o)"/>
+      <line x1="330" y1="265" x2="160" y2="210" stroke="#e8833a" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#a2o)"/>
+      <text x="158" y="245" font-size="7.5" fill="#b5421a">SSE stream</text>
+      <line x1="330" y1="95" x2="378" y2="160" stroke="#3c4858" stroke-width="1.6" marker-end="url(#a2)"/>
+      <text x="332" y="135" font-size="7.5" fill="#3c4858">produce job</text>
+      <line x1="500" y1="170" x2="538" y2="120" stroke="#3c4858" stroke-width="1.6" marker-end="url(#a2)"/>
+      <text x="500" y="145" font-size="7.5" fill="#3c4858">consume</text>
+      <line x1="555" y1="120" x2="500" y2="175" stroke="#3c4858" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+      <text x="505" y="110" font-size="7.5" fill="#3c4858">events</text>
+      <line x1="615" y1="138" x2="631" y2="168" stroke="#0a7d72" stroke-width="1.5" marker-end="url(#a2g)"/>
+      <line x1="600" y1="138" x2="600" y2="268" stroke="#0a7d72" stroke-width="1.4" marker-end="url(#a2g)"/>
+      <line x1="440" y1="220" x2="440" y2="268" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a2)"/>
+    </svg>
+    <figcaption><span class="fig-num">Figure 2.</span> Deployment topology and request flow. Solid lines are commands; dashed lines are asynchronous events / streams.</figcaption>
+  </figure>
+
+  <div class="callout info"><b>Why this shape.</b> Separating the web tier from the worker tier behind
+  Kafka is the single most important architectural decision. It lets the slow, bursty, expensive agent
+  workload be queued durably and scaled by adding consumers, while the API stays fast and responsive.
+  This is the same pattern used in production GenAI platforms and is the heart of the system's
+  scalability and resilience story (Sections 8 and 9).</div>
+
+  <div class="runfoot"><span>3 — System Architecture</span><span class="pageno"></span></div>
+</section>
+
+<section class="page">
+  <div class="runhead"><span>3 — System Architecture</span><span>DeepResearch SRS v1.0</span></div>
+
+  <h2>3.2&nbsp;&nbsp;Component Architecture</h2>
+  <p>Each service is internally layered. The table below records each component's responsibility, the
+  technology that realises it, and how it scales.</p>
+  <table>
+    <tr><th>Component</th><th>Responsibility</th><th>Technology</th><th>Scaling</th></tr>
+    <tr><td><strong>Web SPA</strong></td><td>Render UI, capture input, render the live stream and final report.</td><td>React, Vite</td><td>CDN / static, stateless</td></tr>
+    <tr><td><strong>API Gateway Layer</strong></td><td>Routing, JWT validation, throttling, CORS.</td><td>DRF, SimpleJWT</td><td>Horizontal (stateless)</td></tr>
+    <tr><td><strong>Domain Layer</strong></td><td>Users, runs, reports, documents; business rules.</td><td>Django ORM</td><td>With API</td></tr>
+    <tr><td><strong>Producer</strong></td><td>Publish <code>research.jobs</code> events on submission.</td><td>kafka-python</td><td>With API</td></tr>
+    <tr><td><strong>Agent Orchestrator</strong></td><td>Run the plan→act→observe→verify loop.</td><td>Python, Anthropic SDK</td><td>Kafka consumer group</td></tr>
+    <tr><td><strong>Tool Layer</strong></td><td>Web search, document retrieval, calculator, citation resolver.</td><td>Python adapters</td><td>With worker</td></tr>
+    <tr><td><strong>Retrieval Service</strong></td><td>Chunk, embed, upsert and query documents.</td><td>Qdrant client</td><td>Qdrant cluster</td></tr>
+    <tr><td><strong>Event Publisher</strong></td><td>Emit progress/result events to Kafka &amp; Redis.</td><td>kafka-python, redis</td><td>With worker</td></tr>
+    <tr><td><strong>Stream Gateway</strong></td><td>Bridge Redis pub/sub to per-run SSE responses.</td><td>DRF StreamingHttpResponse</td><td>Horizontal</td></tr>
+  </table>
+
+  <h2>3.3&nbsp;&nbsp;The Agentic Reasoning Loop</h2>
+  <p>The intellectual core of the product is the worker's control loop. The agent is given the goal,
+  a system policy and a set of tools. It iterates: it <em>thinks</em> and decides whether to act,
+  <em>invokes a tool</em>, <em>observes</em> the result, and repeats until it judges it has sufficient
+  grounded evidence — at which point it <em>verifies</em> its draft claims against the collected sources
+  and <em>synthesises</em> the final cited report. A hard iteration ceiling and token budget guarantee
+  termination. Figure&nbsp;3 specifies the loop.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 350" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs><marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
+      <!-- start -->
+      <ellipse cx="90" cy="40" rx="58" ry="22" fill="#2b50d8"/><text x="90" y="44" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Goal received</text>
+      <!-- plan -->
+      <rect x="35" y="95" width="110" height="44" rx="8" fill="#eef2ff" stroke="#2b50d8"/><text x="90" y="113" text-anchor="middle" font-size="9.5" font-weight="700">Plan</text><text x="90" y="127" text-anchor="middle" font-size="7.5" fill="#6b7685">decompose goal</text>
+      <!-- decision -->
+      <polygon points="90,175 160,210 90,245 20,210" fill="#fff3df" stroke="#e8833a"/><text x="90" y="208" text-anchor="middle" font-size="8.5" font-weight="700" fill="#9a5d12">Need more</text><text x="90" y="221" text-anchor="middle" font-size="8.5" font-weight="700" fill="#9a5d12">evidence?</text>
+      <!-- act -->
+      <rect x="230" y="188" width="120" height="44" rx="8" fill="#e6f6f3" stroke="#0fb5a6"/><text x="290" y="206" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0a7d72">Act — call tool</text><text x="290" y="220" text-anchor="middle" font-size="7.5" fill="#0a7d72">search · retrieve</text>
+      <!-- observe -->
+      <rect x="400" y="188" width="120" height="44" rx="8" fill="#fff" stroke="#c4ccda"/><text x="460" y="206" text-anchor="middle" font-size="9.5" font-weight="700">Observe</text><text x="460" y="220" text-anchor="middle" font-size="7.5" fill="#6b7685">ingest result</text>
+      <!-- tools -->
+      <rect x="400" y="95" width="120" height="60" rx="8" fill="#0a7d72"/><text x="460" y="118" text-anchor="middle" font-size="9.5" font-weight="700" fill="#fff">Tool Layer</text><text x="460" y="133" text-anchor="middle" font-size="7.5" fill="#bfeee7">web search</text><text x="460" y="146" text-anchor="middle" font-size="7.5" fill="#bfeee7">RAG retrieval</text>
+      <!-- verify -->
+      <rect x="560" y="188" width="130" height="44" rx="8" fill="#fde9e3" stroke="#b5421a"/><text x="625" y="206" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b5421a">Verify claims</text><text x="625" y="220" text-anchor="middle" font-size="7.5" fill="#b5421a">vs. sources</text>
+      <!-- synth -->
+      <rect x="560" y="280" width="130" height="44" rx="8" fill="#1b2f7a"/><text x="625" y="298" text-anchor="middle" font-size="9.5" font-weight="700" fill="#fff">Synthesise report</text><text x="625" y="312" text-anchor="middle" font-size="7.5" fill="#c7d2ff">inline citations</text>
+      <!-- end -->
+      <ellipse cx="290" cy="302" rx="62" ry="22" fill="#0fb5a6"/><text x="290" y="306" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Report delivered</text>
+
+      <!-- flows -->
+      <line x1="90" y1="62" x2="90" y2="93" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a3)"/>
+      <line x1="90" y1="139" x2="90" y2="173" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a3)"/>
+      <line x1="160" y1="210" x2="228" y2="210" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a3)"/><text x="172" y="202" font-size="8" font-weight="700" fill="#0a7d72">Yes</text>
+      <line x1="350" y1="210" x2="398" y2="210" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a3)"/>
+      <line x1="290" y1="188" x2="290" y2="157" stroke="#3c4858" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#a3)"/>
+      <line x1="460" y1="155" x2="460" y2="186" stroke="#3c4858" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#a3)"/>
+      <path d="M460,232 C460,265 200,265 95,247" fill="none" stroke="#3c4858" stroke-width="1.3" marker-end="url(#a3)"/><text x="250" y="262" font-size="7.5" fill="#6b7685">loop back (≤ max iters)</text>
+      <line x1="160" y1="205" x2="558" y2="205" stroke="#b5421a" stroke-width="0" />
+      <path d="M150,225 C150,250 540,250 560,215" fill="none" stroke="#3c4858" stroke-width="0"/>
+      <line x1="90" y1="245" x2="600" y2="245" stroke="#3c4858" stroke-width="0"/>
+      <line x1="118" y1="232" x2="560" y2="210" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a3)"/><text x="300" y="240" font-size="8" font-weight="700" fill="#b5421a">No → verify</text>
+      <line x1="625" y1="232" x2="625" y2="278" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a3)"/>
+      <line x1="560" y1="302" x2="354" y2="302" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a3)"/>
+    </svg>
+    <figcaption><span class="fig-num">Figure 3.</span> The agentic reasoning loop: plan → (act → observe)* → verify → synthesise, bounded by an iteration ceiling and token budget.</figcaption>
+  </figure>
+
+  <div class="runfoot"><span>3 — System Architecture</span><span class="pageno"></span></div>
+</section>
+
+<section class="page">
+  <div class="runhead"><span>3 — System Architecture</span><span>DeepResearch SRS v1.0</span></div>
+
+  <h2>3.4&nbsp;&nbsp;Event-Driven Messaging Model</h2>
+  <p>Kafka topics form the contract between services. Topics are partitioned to allow parallel
+  consumption; a run's identifier is used as the partition key so that all events for one run preserve
+  order. Consumer offsets are committed only after successful processing, giving at-least-once delivery;
+  handlers are idempotent on <code>run_id</code> + <code>seq</code> to make reprocessing safe.</p>
+  <table>
+    <tr><th>Topic</th><th>Producer</th><th>Consumer</th><th>Key</th><th>Payload</th></tr>
+    <tr><td><code>research.jobs</code></td><td>Django API</td><td>Agent workers</td><td>run_id</td><td>Question, options, user, document scope.</td></tr>
+    <tr><td><code>research.events</code></td><td>Agent worker</td><td>Stream gateway</td><td>run_id</td><td>Step type, message, partial output, timestamp.</td></tr>
+    <tr><td><code>research.results</code></td><td>Agent worker</td><td>Django API</td><td>run_id</td><td>Final report, citations, token/cost usage.</td></tr>
+    <tr><td><code>research.dlq</code></td><td>Any consumer</td><td>Ops tooling</td><td>run_id</td><td>Failed event + error context (dead-letter).</td></tr>
+  </table>
+
+  <figure>
+    <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs><marker id="a4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
+      <rect x="20" y="80" width="120" height="56" rx="9" fill="#fff" stroke="#2b50d8" stroke-width="2"/><text x="80" y="104" text-anchor="middle" font-size="10" font-weight="700" fill="#1b2f7a">Django API</text><text x="80" y="120" text-anchor="middle" font-size="8" fill="#6b7685">producer</text>
+      <g>
+        <rect x="220" y="20" width="180" height="34" rx="6" fill="#1b2f7a"/><text x="310" y="42" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">research.jobs</text>
+        <rect x="220" y="93" width="180" height="34" rx="6" fill="#2b50d8"/><text x="310" y="115" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">research.events</text>
+        <rect x="220" y="166" width="180" height="34" rx="6" fill="#0fb5a6"/><text x="310" y="188" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">research.results</text>
+      </g>
+      <rect x="470" y="20" width="160" height="50" rx="9" fill="#fff" stroke="#0fb5a6" stroke-width="2"/><text x="550" y="42" text-anchor="middle" font-size="10" font-weight="700" fill="#0a7d72">Agent Workers</text><text x="550" y="57" text-anchor="middle" font-size="8" fill="#6b7685">consumer group</text>
+      <rect x="470" y="100" width="160" height="44" rx="9" fill="#fff" stroke="#e8833a" stroke-width="2"/><text x="550" y="120" text-anchor="middle" font-size="10" font-weight="700" fill="#b5421a">Stream Gateway</text><text x="550" y="134" text-anchor="middle" font-size="8" fill="#6b7685">→ Redis → SSE</text>
+      <rect x="470" y="166" width="160" height="40" rx="9" fill="#fff" stroke="#2b50d8" stroke-width="2"/><text x="550" y="190" text-anchor="middle" font-size="10" font-weight="700" fill="#1b2f7a">Django API</text>
+
+      <line x1="140" y1="100" x2="218" y2="40" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a4)"/>
+      <line x1="400" y1="37" x2="468" y2="45" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a4)"/>
+      <line x1="468" y1="55" x2="402" y2="100" stroke="#3c4858" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#a4)"/>
+      <line x1="400" y1="110" x2="468" y2="120" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a4)"/>
+      <line x1="470" y1="40" x2="402" y2="180" stroke="#3c4858" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#a4)"/>
+      <line x1="400" y1="183" x2="468" y2="186" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a4)"/>
+    </svg>
+    <figcaption><span class="fig-num">Figure 4.</span> Kafka topic topology and the producers/consumers bound to each.</figcaption>
+  </figure>
+
+  <h2>3.5&nbsp;&nbsp;Retrieval-Augmented Generation Pipeline</h2>
+  <p>RAG operates in two phases. <strong>Ingestion</strong> (offline, on upload): a document is parsed,
+  split into overlapping chunks, embedded and upserted into Qdrant with metadata. <strong>Retrieval</strong>
+  (online, during a run): the agent's sub-question is embedded, the top-<em>k</em> nearest chunks are
+  fetched, optionally re-ranked, and supplied to the model as grounded context with their source
+  references preserved for citation. Figure&nbsp;5 shows both phases.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs><marker id="a5" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
+      <text x="20" y="22" font-size="9" font-weight="700" fill="#1b2f7a">INGESTION (on upload)</text>
+      <rect x="20" y="32" width="92" height="40" rx="7" fill="#fff" stroke="#c4ccda"/><text x="66" y="50" text-anchor="middle" font-size="8.5" font-weight="600">Document</text><text x="66" y="63" text-anchor="middle" font-size="7.5" fill="#6b7685">PDF · txt</text>
+      <rect x="140" y="32" width="92" height="40" rx="7" fill="#fff" stroke="#c4ccda"/><text x="186" y="50" text-anchor="middle" font-size="8.5" font-weight="600">Chunk</text><text x="186" y="63" text-anchor="middle" font-size="7.5" fill="#6b7685">overlap split</text>
+      <rect x="260" y="32" width="92" height="40" rx="7" fill="#eef2ff" stroke="#2b50d8"/><text x="306" y="50" text-anchor="middle" font-size="8.5" font-weight="600">Embed</text><text x="306" y="63" text-anchor="middle" font-size="7.5" fill="#6b7685">vector</text>
+      <rect x="380" y="32" width="100" height="40" rx="7" fill="#0fb5a6"/><text x="430" y="50" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Qdrant upsert</text><text x="430" y="63" text-anchor="middle" font-size="7.5" fill="#bfeee7">+ metadata</text>
+      <line x1="112" y1="52" x2="138" y2="52" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
+      <line x1="232" y1="52" x2="258" y2="52" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
+      <line x1="352" y1="52" x2="378" y2="52" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
+
+      <text x="20" y="118" font-size="9" font-weight="700" fill="#0a7d72">RETRIEVAL (during a run)</text>
+      <rect x="20" y="128" width="92" height="42" rx="7" fill="#fff" stroke="#c4ccda"/><text x="66" y="146" text-anchor="middle" font-size="8.5" font-weight="600">Sub-question</text><text x="66" y="160" text-anchor="middle" font-size="7.5" fill="#6b7685">from agent</text>
+      <rect x="140" y="128" width="92" height="42" rx="7" fill="#eef2ff" stroke="#2b50d8"/><text x="186" y="146" text-anchor="middle" font-size="8.5" font-weight="600">Embed query</text>
+      <rect x="260" y="128" width="92" height="42" rx="7" fill="#0fb5a6"/><text x="306" y="146" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Top-k search</text><text x="306" y="160" text-anchor="middle" font-size="7.5" fill="#bfeee7">Qdrant</text>
+      <rect x="380" y="128" width="92" height="42" rx="7" fill="#fff3df" stroke="#e8833a"/><text x="426" y="146" text-anchor="middle" font-size="8.5" font-weight="600" fill="#9a5d12">Re-rank</text><text x="426" y="160" text-anchor="middle" font-size="7.5" fill="#9a5d12">relevance</text>
+      <rect x="500" y="128" width="100" height="42" rx="7" fill="#1b2f7a"/><text x="550" y="146" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Grounded</text><text x="550" y="160" text-anchor="middle" font-size="7.5" fill="#c7d2ff">context → LLM</text>
+      <rect x="628" y="128" width="74" height="42" rx="7" fill="#fff" stroke="#c4ccda"/><text x="665" y="150" text-anchor="middle" font-size="8.5" font-weight="600">Citation</text><text x="665" y="163" text-anchor="middle" font-size="7.5" fill="#6b7685">refs</text>
+      <line x1="112" y1="149" x2="138" y2="149" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
+      <line x1="232" y1="149" x2="258" y2="149" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
+      <line x1="352" y1="149" x2="378" y2="149" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
+      <line x1="472" y1="149" x2="498" y2="149" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
+      <line x1="600" y1="149" x2="626" y2="149" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a5)"/>
+    </svg>
+    <figcaption><span class="fig-num">Figure 5.</span> The two-phase RAG pipeline: offline ingestion and online retrieval with re-ranking and citation preservation.</figcaption>
+  </figure>
+
+  <div class="runfoot"><span>3 — System Architecture</span><span class="pageno"></span></div>
+</section>
+<!-- ============ 4. EXTERNAL INTERFACES ============ -->
+<section class="page">
+  <div class="runhead"><span>4 — External Interface Requirements</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>4&nbsp;&nbsp;External Interface Requirements</h1>
+
+  <h2>4.1&nbsp;&nbsp;User Interfaces</h2>
+  <p>The SPA presents three principal screens. All views shall be responsive down to a 1024&nbsp;px width,
+  meet WCAG&nbsp;2.1 AA contrast, and remain fully operable by keyboard.</p>
+  <table>
+    <tr><th>Screen</th><th>Purpose</th><th>Key Elements</th></tr>
+    <tr><td><strong>Dashboard</strong></td><td>Entry point and history.</td><td>New-question composer, depth selector, document scope, list of past runs with status.</td></tr>
+    <tr><td><strong>Run View</strong></td><td>Watch a research run unfold.</td><td>Live step timeline (plan, searches, observations, verification), token/cost meter, cancel control.</td></tr>
+    <tr><td><strong>Report View</strong></td><td>Read &amp; export the result.</td><td>Structured report, inline citation chips linking to sources, export (Markdown/PDF), re-run.</td></tr>
+  </table>
+  <figure>
+    <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <rect x="20" y="20" width="210" height="180" rx="8" fill="#fff" stroke="#c4ccda"/>
+      <rect x="20" y="20" width="210" height="26" rx="8" fill="#2b50d8"/><text x="34" y="37" font-size="9" font-weight="700" fill="#fff">Dashboard</text>
+      <rect x="34" y="58" width="182" height="26" rx="5" fill="#eef2ff" stroke="#2b50d8"/><text x="42" y="75" font-size="8" fill="#1b2f7a">Ask a research question…</text>
+      <rect x="34" y="92" width="56" height="16" rx="8" fill="#e6f6f3"/><text x="62" y="104" text-anchor="middle" font-size="7" fill="#0a7d72">Depth</text>
+      <rect x="96" y="92" width="60" height="16" rx="8" fill="#fff3df"/><text x="126" y="104" text-anchor="middle" font-size="7" fill="#9a5d12">Docs</text>
+      <line x1="34" y1="124" x2="216" y2="124" stroke="#e2e6ee"/><text x="34" y="140" font-size="7.5" fill="#6b7685">Recent runs</text>
+      <rect x="34" y="146" width="182" height="14" rx="3" fill="#f7f9fc"/><rect x="34" y="164" width="182" height="14" rx="3" fill="#f7f9fc"/>
+
+      <rect x="245" y="20" width="210" height="180" rx="8" fill="#fff" stroke="#c4ccda"/>
+      <rect x="245" y="20" width="210" height="26" rx="8" fill="#0fb5a6"/><text x="259" y="37" font-size="9" font-weight="700" fill="#fff">Run View — live</text>
+      <circle cx="266" cy="64" r="4" fill="#2b50d8"/><text x="278" y="67" font-size="7.5" fill="#1a2233">Planned 4 sub-questions</text>
+      <circle cx="266" cy="84" r="4" fill="#0fb5a6"/><text x="278" y="87" font-size="7.5" fill="#1a2233">Searching the web…</text>
+      <circle cx="266" cy="104" r="4" fill="#0fb5a6"/><text x="278" y="107" font-size="7.5" fill="#1a2233">Retrieved 6 chunks</text>
+      <circle cx="266" cy="124" r="4" fill="#e8833a"/><text x="278" y="127" font-size="7.5" fill="#1a2233">Verifying claims…</text>
+      <rect x="259" y="160" width="182" height="22" rx="6" fill="#f5f7fb"/><text x="268" y="174" font-size="7.5" fill="#6b7685">tokens 18.2k · $0.07 · cancel</text>
+
+      <rect x="470" y="20" width="210" height="180" rx="8" fill="#fff" stroke="#c4ccda"/>
+      <rect x="470" y="20" width="210" height="26" rx="8" fill="#1b2f7a"/><text x="484" y="37" font-size="9" font-weight="700" fill="#fff">Report</text>
+      <rect x="484" y="56" width="150" height="9" rx="2" fill="#1a2233"/>
+      <rect x="484" y="72" width="182" height="6" rx="2" fill="#e2e6ee"/><rect x="484" y="84" width="182" height="6" rx="2" fill="#e2e6ee"/><rect x="484" y="96" width="140" height="6" rx="2" fill="#e2e6ee"/>
+      <rect x="630" y="70" width="14" height="11" rx="3" fill="#eef2ff" stroke="#2b50d8"/><text x="637" y="79" text-anchor="middle" font-size="6.5" fill="#1b2f7a">1</text>
+      <rect x="484" y="112" width="182" height="6" rx="2" fill="#e2e6ee"/><rect x="484" y="124" width="160" height="6" rx="2" fill="#e2e6ee"/>
+      <rect x="484" y="168" width="60" height="18" rx="9" fill="#2b50d8"/><text x="514" y="180" text-anchor="middle" font-size="7.5" fill="#fff">Export</text>
+    </svg>
+    <figcaption><span class="fig-num">Figure 6.</span> Wireframes for the three principal screens.</figcaption>
+  </figure>
+
+  <h2>4.2&nbsp;&nbsp;Software &amp; API Interfaces</h2>
+  <p>The HTTP API is REST/JSON, versioned under <code>/api/v1</code>. Representative endpoints:</p>
+  <table>
+    <tr><th>Method &amp; Path</th><th>Auth</th><th>Purpose</th></tr>
+    <tr><td><code>POST /api/v1/auth/register</code></td><td>—</td><td>Create an account.</td></tr>
+    <tr><td><code>POST /api/v1/auth/token</code></td><td>—</td><td>Obtain JWT access &amp; refresh tokens.</td></tr>
+    <tr><td><code>POST /api/v1/auth/token/refresh</code></td><td>refresh</td><td>Rotate the access token.</td></tr>
+    <tr><td><code>POST /api/v1/runs</code></td><td>JWT</td><td>Submit a research question; returns a <code>run_id</code>.</td></tr>
+    <tr><td><code>GET /api/v1/runs</code></td><td>JWT</td><td>List the caller's runs with status.</td></tr>
+    <tr><td><code>GET /api/v1/runs/{id}</code></td><td>JWT</td><td>Fetch a run and its final report.</td></tr>
+    <tr><td><code>GET /api/v1/runs/{id}/stream</code></td><td>JWT</td><td>SSE stream of live progress events.</td></tr>
+    <tr><td><code>POST /api/v1/runs/{id}/cancel</code></td><td>JWT</td><td>Request cancellation of an in-flight run.</td></tr>
+    <tr><td><code>POST /api/v1/documents</code></td><td>JWT</td><td>Upload a document for RAG ingestion.</td></tr>
+    <tr><td><code>GET /api/v1/health</code></td><td>—</td><td>Liveness/readiness for orchestration.</td></tr>
+  </table>
+  <p>External provider interfaces: the <strong>Anthropic Claude API</strong> (messages + tool use) and a
+  <strong>web-search</strong> provider, both consumed exclusively by the worker tier over HTTPS with keys
+  supplied as environment secrets.</p>
+
+  <h2>4.3&nbsp;&nbsp;Communication Interfaces</h2>
+  <ul>
+    <li>All client traffic is HTTPS; progress uses <strong>Server-Sent Events</strong> over a long-lived HTTP response.</li>
+    <li>Inter-service async messaging is <strong>Kafka</strong> over the cluster network with versioned JSON event schemas.</li>
+    <li>Internal data connections (Postgres, Redis, Qdrant) are TLS-capable and confined to the cluster network.</li>
+  </ul>
+
+  <div class="runfoot"><span>4 — External Interface Requirements</span><span class="pageno"></span></div>
+</section>
+
+<!-- ============ 5. FUNCTIONAL REQUIREMENTS ============ -->
+<section class="page">
+  <div class="runhead"><span>5 — Functional Requirements</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>5&nbsp;&nbsp;Functional Requirements</h1>
+  <p class="lead">Requirements are grouped by module. Each is uniquely identified, prioritised and
+  individually verifiable. Acceptance criteria for representative requirements appear in Section&nbsp;11.</p>
+
+  <h2>5.1&nbsp;&nbsp;Authentication &amp; Account Management</h2>
+  <table>
+    <tr><th style="width:24mm">ID</th><th>Requirement</th><th style="width:20mm">Priority</th></tr>
+    <tr><td class="req-id">FR-AUTH-1</td><td>The system shall allow a visitor to register with an email and password; passwords shall be stored only as salted hashes.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AUTH-2</td><td>The system shall issue a short-lived JWT access token and a longer-lived refresh token on successful login.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AUTH-3</td><td>The system shall reject API requests to protected resources that lack a valid, unexpired access token.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AUTH-4</td><td>The system shall allow a user to refresh an access token using a valid refresh token without re-entering credentials.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AUTH-5</td><td>The system shall scope every run, report and document to its owning user; a user shall never access another user's data.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AUTH-6</td><td>The system should enforce a password-strength policy and rate-limit failed login attempts.</td><td><span class="tag med">Medium</span></td></tr>
+  </table>
+
+  <h2>5.2&nbsp;&nbsp;Research Submission &amp; Lifecycle</h2>
+  <table>
+    <tr><th style="width:24mm">ID</th><th>Requirement</th><th style="width:20mm">Priority</th></tr>
+    <tr><td class="req-id">FR-RUN-1</td><td>The system shall allow an authenticated user to submit a research question of up to 2,000 characters.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RUN-2</td><td>The system shall accept optional parameters: research depth (quick/standard/deep) and document scope.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">FR-RUN-3</td><td>On submission the system shall persist a run with status <code>QUEUED</code> and return its identifier within 300&nbsp;ms.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RUN-4</td><td>The system shall transition a run through <code>QUEUED → RUNNING → (COMPLETED | FAILED | CANCELLED)</code> and record timestamps for each transition.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RUN-5</td><td>The system shall allow a user to cancel a run that is QUEUED or RUNNING; the worker shall stop at the next safe checkpoint.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">FR-RUN-6</td><td>The system shall record token usage and estimated cost for every completed run.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">FR-RUN-7</td><td>The system shall retry a transiently failed run automatically up to a configured maximum before marking it FAILED and routing it to the dead-letter topic.</td><td><span class="tag med">Medium</span></td></tr>
+  </table>
+
+  <div class="runfoot"><span>5 — Functional Requirements</span><span class="pageno"></span></div>
+</section>
+
+<section class="page">
+  <div class="runhead"><span>5 — Functional Requirements</span><span>DeepResearch SRS v1.0</span></div>
+
+  <h2>5.3&nbsp;&nbsp;Agent Orchestration</h2>
+  <table>
+    <tr><th style="width:24mm">ID</th><th>Requirement</th><th style="width:20mm">Priority</th></tr>
+    <tr><td class="req-id">FR-AGT-1</td><td>The agent shall decompose the question into an explicit, ordered plan of sub-questions before acting.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AGT-2</td><td>The agent shall autonomously select and invoke tools (web search, document retrieval, calculator) via the model's tool-use interface.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AGT-3</td><td>The agent shall iterate plan→act→observe until evidence is sufficient or a hard ceiling of <em>N</em> iterations is reached.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AGT-4</td><td>The agent shall enforce a per-run token and wall-clock budget and terminate gracefully if either is exhausted.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AGT-5</td><td>The agent shall verify each material claim in its draft against at least one retrieved source before inclusion.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AGT-6</td><td>The agent shall drop or explicitly flag any claim it cannot ground in a source.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AGT-7</td><td>The agent shall emit a structured progress event for every plan, tool call, observation and verification step.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-AGT-8</td><td>The agent shall be resilient to a single tool failure, retrying or routing around it without aborting the run.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">FR-AGT-9</td><td>The agent's system policy and tool schemas shall be versioned so that behaviour is reproducible.</td><td><span class="tag med">Medium</span></td></tr>
+  </table>
+
+  <h2>5.4&nbsp;&nbsp;Knowledge &amp; Retrieval (RAG)</h2>
+  <table>
+    <tr><th style="width:24mm">ID</th><th>Requirement</th><th style="width:20mm">Priority</th></tr>
+    <tr><td class="req-id">FR-RAG-1</td><td>The system shall accept document uploads (PDF, TXT, Markdown) up to a configured size limit.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RAG-2</td><td>The system shall parse, chunk with overlap, embed and upsert uploaded documents into the vector store with source metadata.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RAG-3</td><td>The system shall retrieve the top-<em>k</em> most semantically relevant chunks for a query, scoped to the user's documents.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RAG-4</td><td>The system should re-rank retrieved chunks to improve precision before supplying them to the model.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">FR-RAG-5</td><td>Every retrieved chunk shall retain a resolvable reference to its source document and location.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RAG-6</td><td>The system shall report ingestion status (processing, ready, failed) per document.</td><td><span class="tag med">Medium</span></td></tr>
+  </table>
+
+  <h2>5.5&nbsp;&nbsp;Live Progress Streaming</h2>
+  <table>
+    <tr><th style="width:24mm">ID</th><th>Requirement</th><th style="width:20mm">Priority</th></tr>
+    <tr><td class="req-id">FR-STR-1</td><td>The system shall stream progress events to the client over SSE with end-to-end latency under 1&nbsp;second from event emission.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-STR-2</td><td>The stream shall deliver events for a run in the order they were produced.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-STR-3</td><td>The system shall allow a client that reconnects mid-run to resume from the last received event sequence.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">FR-STR-4</td><td>The stream shall emit a terminal event signalling completion, failure or cancellation.</td><td><span class="tag high">High</span></td></tr>
+  </table>
+
+  <h2>5.6&nbsp;&nbsp;Reports, History &amp; Export</h2>
+  <table>
+    <tr><th style="width:24mm">ID</th><th>Requirement</th><th style="width:20mm">Priority</th></tr>
+    <tr><td class="req-id">FR-RPT-1</td><td>The system shall persist the final report with its sections and citation list.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RPT-2</td><td>Each citation shall resolve to its underlying source (URL or document location).</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RPT-3</td><td>The system shall list a user's past runs with question, status, date and cost, newest first.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-RPT-4</td><td>The system shall allow export of a report as Markdown and PDF.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">FR-RPT-5</td><td>The system should allow re-running a past question, preserving the original for comparison.</td><td><span class="tag low">Low</span></td></tr>
+  </table>
+
+  <h2>5.7&nbsp;&nbsp;Administration &amp; Observability</h2>
+  <table>
+    <tr><th style="width:24mm">ID</th><th>Requirement</th><th style="width:20mm">Priority</th></tr>
+    <tr><td class="req-id">FR-ADM-1</td><td>The system shall expose health/readiness endpoints for every service.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-ADM-2</td><td>The system shall emit structured logs correlated by <code>run_id</code> across services.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">FR-ADM-3</td><td>The system shall expose operational metrics (queue depth, run latency, error rate, token spend).</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">FR-ADM-4</td><td>An administrator shall be able to inspect failed runs and the dead-letter queue.</td><td><span class="tag med">Medium</span></td></tr>
+  </table>
+
+  <div class="runfoot"><span>5 — Functional Requirements</span><span class="pageno"></span></div>
+</section>
+<!-- ============ 6. DATA REQUIREMENTS ============ -->
+<section class="page">
+  <div class="runhead"><span>6 — Data Requirements &amp; Database Design</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>6&nbsp;&nbsp;Data Requirements &amp; Database Design</h1>
+
+  <h2>6.1&nbsp;&nbsp;Logical Data Model</h2>
+  <p>PostgreSQL is the system of record for identity and operational data. Qdrant stores embeddings and
+  chunk metadata for retrieval. Figure&nbsp;7 shows the core relational entities and their relationships.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 330" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs><marker id="a6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#3c4858"/></marker></defs>
+      <!-- USER -->
+      <rect x="30" y="40" width="160" height="120" rx="6" fill="#fff" stroke="#2b50d8" stroke-width="1.6"/>
+      <rect x="30" y="40" width="160" height="24" rx="6" fill="#2b50d8"/><text x="110" y="57" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">User</text>
+      <text x="42" y="82" font-size="8"><tspan font-weight="700" fill="#1b2f7a">PK</tspan> id</text>
+      <text x="42" y="98" font-size="8">email · unique</text>
+      <text x="42" y="114" font-size="8">password_hash</text>
+      <text x="42" y="130" font-size="8">created_at</text>
+      <text x="42" y="146" font-size="8">is_active</text>
+      <!-- RUN -->
+      <rect x="280" y="20" width="170" height="160" rx="6" fill="#fff" stroke="#0fb5a6" stroke-width="1.6"/>
+      <rect x="280" y="20" width="170" height="24" rx="6" fill="#0fb5a6"/><text x="365" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">ResearchRun</text>
+      <text x="292" y="62" font-size="8"><tspan font-weight="700" fill="#0a7d72">PK</tspan> id</text>
+      <text x="292" y="78" font-size="8"><tspan font-weight="700" fill="#b5421a">FK</tspan> user_id</text>
+      <text x="292" y="94" font-size="8">question</text>
+      <text x="292" y="110" font-size="8">depth · status</text>
+      <text x="292" y="126" font-size="8">tokens · cost</text>
+      <text x="292" y="142" font-size="8">created_at · ended_at</text>
+      <text x="292" y="158" font-size="8">error</text>
+      <!-- REPORT -->
+      <rect x="540" y="20" width="160" height="120" rx="6" fill="#fff" stroke="#1b2f7a" stroke-width="1.6"/>
+      <rect x="540" y="20" width="160" height="24" rx="6" fill="#1b2f7a"/><text x="620" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Report</text>
+      <text x="552" y="62" font-size="8"><tspan font-weight="700" fill="#1b2f7a">PK</tspan> id</text>
+      <text x="552" y="78" font-size="8"><tspan font-weight="700" fill="#b5421a">FK</tspan> run_id · unique</text>
+      <text x="552" y="94" font-size="8">summary</text>
+      <text x="552" y="110" font-size="8">body (sections)</text>
+      <text x="552" y="126" font-size="8">created_at</text>
+      <!-- CITATION -->
+      <rect x="540" y="190" width="160" height="120" rx="6" fill="#fff" stroke="#e8833a" stroke-width="1.6"/>
+      <rect x="540" y="190" width="160" height="24" rx="6" fill="#e8833a"/><text x="620" y="207" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Citation</text>
+      <text x="552" y="232" font-size="8"><tspan font-weight="700" fill="#b5421a">PK</tspan> id</text>
+      <text x="552" y="248" font-size="8"><tspan font-weight="700" fill="#b5421a">FK</tspan> report_id</text>
+      <text x="552" y="264" font-size="8">marker · title</text>
+      <text x="552" y="280" font-size="8">url / doc_ref</text>
+      <text x="552" y="296" font-size="8">snippet</text>
+      <!-- DOCUMENT -->
+      <rect x="280" y="210" width="170" height="100" rx="6" fill="#fff" stroke="#6b7685" stroke-width="1.6"/>
+      <rect x="280" y="210" width="170" height="24" rx="6" fill="#6b7685"/><text x="365" y="227" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Document</text>
+      <text x="292" y="252" font-size="8"><tspan font-weight="700" fill="#1b2f7a">PK</tspan> id</text>
+      <text x="292" y="268" font-size="8"><tspan font-weight="700" fill="#b5421a">FK</tspan> user_id</text>
+      <text x="292" y="284" font-size="8">filename · status</text>
+      <text x="292" y="300" font-size="8">chunk_count</text>
+      <!-- rels -->
+      <line x1="190" y1="90" x2="278" y2="90" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a6)"/><text x="205" y="84" font-size="7.5" fill="#6b7685">1 — N</text>
+      <line x1="450" y1="80" x2="538" y2="80" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a6)"/><text x="465" y="74" font-size="7.5" fill="#6b7685">1 — 1</text>
+      <line x1="620" y1="140" x2="620" y2="188" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a6)"/><text x="626" y="166" font-size="7.5" fill="#6b7685">1 — N</text>
+      <line x1="190" y1="120" x2="278" y2="250" stroke="#3c4858" stroke-width="1.5" marker-end="url(#a6)"/><text x="205" y="200" font-size="7.5" fill="#6b7685">1 — N</text>
+    </svg>
+    <figcaption><span class="fig-num">Figure 7.</span> Entity-relationship model of the core relational schema (PostgreSQL).</figcaption>
+  </figure>
+
+  <h2>6.2&nbsp;&nbsp;Key Entities &amp; Retention</h2>
+  <table>
+    <tr><th>Entity</th><th>Notes</th><th>Retention</th></tr>
+    <tr><td><strong>User</strong></td><td>Credentials &amp; profile; password stored as a salted hash only.</td><td>Until account deletion.</td></tr>
+    <tr><td><strong>ResearchRun</strong></td><td>One execution; carries status, budget usage and timing.</td><td>Indefinite (user-owned).</td></tr>
+    <tr><td><strong>Report</strong></td><td>Structured final output of a run.</td><td>With its run.</td></tr>
+    <tr><td><strong>Citation</strong></td><td>Resolvable source backing a claim.</td><td>With its report.</td></tr>
+    <tr><td><strong>Document</strong></td><td>Uploaded source; embeddings live in Qdrant keyed by document id.</td><td>Until user deletes.</td></tr>
+    <tr><td><strong>Vector point (Qdrant)</strong></td><td>Chunk embedding + metadata (doc id, position, text).</td><td>With its document.</td></tr>
+  </table>
+
+  <div class="callout note"><b>Integrity rules.</b> Deleting a user cascades to their runs, reports,
+  citations and documents, and triggers removal of the corresponding Qdrant points. Reports are
+  immutable once written; a re-run creates a new run rather than mutating history.</div>
+
+  <div class="runfoot"><span>6 — Data Requirements &amp; Database Design</span><span class="pageno"></span></div>
+</section>
+
+<!-- ============ 7. USE CASES ============ -->
+<section class="page">
+  <div class="runhead"><span>7 — Use Cases &amp; Behavioural Models</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>7&nbsp;&nbsp;Use Cases &amp; Behavioural Models</h1>
+
+  <h2>7.1&nbsp;&nbsp;Use-Case Overview</h2>
+  <figure>
+    <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs><marker id="a7" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
+      <!-- actor researcher -->
+      <circle cx="60" cy="80" r="14" fill="#2b50d8"/><line x1="60" y1="94" x2="60" y2="124" stroke="#2b50d8" stroke-width="3"/><line x1="44" y1="106" x2="76" y2="106" stroke="#2b50d8" stroke-width="3"/><line x1="60" y1="124" x2="46" y2="146" stroke="#2b50d8" stroke-width="3"/><line x1="60" y1="124" x2="74" y2="146" stroke="#2b50d8" stroke-width="3"/>
+      <text x="60" y="164" text-anchor="middle" font-size="9" font-weight="600">Researcher</text>
+      <!-- actor admin -->
+      <circle cx="60" cy="210" r="12" fill="#6b7685"/><line x1="60" y1="222" x2="60" y2="246" stroke="#6b7685" stroke-width="3"/><line x1="46" y1="232" x2="74" y2="232" stroke="#6b7685" stroke-width="3"/>
+      <text x="60" y="262" text-anchor="middle" font-size="9" font-weight="600">Admin</text>
+      <!-- boundary -->
+      <rect x="160" y="20" width="400" height="230" rx="12" fill="#fafbff" stroke="#c4ccda" stroke-dasharray="5 4"/>
+      <ellipse cx="270" cy="55" rx="78" ry="22" fill="#eef2ff" stroke="#2b50d8"/><text x="270" y="59" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b2f7a">UC-1 Register / Login</text>
+      <ellipse cx="270" cy="110" rx="78" ry="22" fill="#eef2ff" stroke="#2b50d8"/><text x="270" y="114" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b2f7a">UC-2 Submit research</text>
+      <ellipse cx="270" cy="165" rx="78" ry="22" fill="#eef2ff" stroke="#2b50d8"/><text x="270" y="169" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b2f7a">UC-3 Watch progress</text>
+      <ellipse cx="270" cy="220" rx="78" ry="22" fill="#eef2ff" stroke="#2b50d8"/><text x="270" y="224" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b2f7a">UC-4 Upload documents</text>
+      <ellipse cx="460" cy="82" rx="78" ry="22" fill="#e6f6f3" stroke="#0fb5a6"/><text x="460" y="86" text-anchor="middle" font-size="8.5" font-weight="600" fill="#0a7d72">UC-5 View / export report</text>
+      <ellipse cx="460" cy="150" rx="78" ry="22" fill="#fff3df" stroke="#e8833a"/><text x="460" y="154" text-anchor="middle" font-size="8.5" font-weight="600" fill="#9a5d12">UC-6 Manage history</text>
+      <ellipse cx="460" cy="218" rx="78" ry="22" fill="#f1f3f6" stroke="#6b7685"/><text x="460" y="222" text-anchor="middle" font-size="8.5" font-weight="600" fill="#3c4858">UC-7 Monitor system</text>
+      <!-- links -->
+      <line x1="76" y1="86" x2="192" y2="60" stroke="#3c4858" stroke-width="1.2" marker-end="url(#a7)"/>
+      <line x1="76" y1="92" x2="192" y2="110" stroke="#3c4858" stroke-width="1.2" marker-end="url(#a7)"/>
+      <line x1="76" y1="100" x2="192" y2="165" stroke="#3c4858" stroke-width="1.2" marker-end="url(#a7)"/>
+      <line x1="76" y1="108" x2="192" y2="216" stroke="#3c4858" stroke-width="1.2" marker-end="url(#a7)"/>
+      <line x1="348" y1="105" x2="382" y2="88" stroke="#3c4858" stroke-width="1.0" stroke-dasharray="3 2" marker-end="url(#a7)"/>
+      <line x1="72" y1="210" x2="382" y2="218" stroke="#3c4858" stroke-width="1.2" marker-end="url(#a7)"/>
+    </svg>
+    <figcaption><span class="fig-num">Figure 8.</span> Use-case diagram for the Researcher and Administrator actors.</figcaption>
+  </figure>
+
+  <h2>7.2&nbsp;&nbsp;Detailed Use Case — UC-2 Submit Research</h2>
+  <table>
+    <tr><th style="width:34mm">Field</th><th>Description</th></tr>
+    <tr><td><strong>Actor</strong></td><td>Researcher (authenticated).</td></tr>
+    <tr><td><strong>Precondition</strong></td><td>User is logged in with a valid access token.</td></tr>
+    <tr><td><strong>Trigger</strong></td><td>User submits a question from the dashboard.</td></tr>
+    <tr><td><strong>Main flow</strong></td><td>1. User enters a question and optional depth/scope. 2. API validates input and persists a <code>QUEUED</code> run. 3. API publishes a <code>research.jobs</code> event and returns the run id. 4. UI navigates to the Run View and opens the SSE stream. 5. A worker consumes the job and executes the agent loop, emitting progress events. 6. On completion the worker publishes the result; the run becomes <code>COMPLETED</code>. 7. UI renders the cited report.</td></tr>
+    <tr><td><strong>Alternate</strong></td><td>3a. Validation fails → 400 with field errors, no run created. 5a. Transient failure → automatic retry (FR-RUN-7). 5b. Budget exhausted → run completes with a partial, clearly-labelled report.</td></tr>
+    <tr><td><strong>Postcondition</strong></td><td>A persisted run and (on success) an immutable report with citations.</td></tr>
+  </table>
+
+  <div class="runfoot"><span>7 — Use Cases &amp; Behavioural Models</span><span class="pageno"></span></div>
+</section>
+
+<section class="page">
+  <div class="runhead"><span>7 — Use Cases &amp; Behavioural Models</span><span>DeepResearch SRS v1.0</span></div>
+
+  <h2>7.3&nbsp;&nbsp;Sequence — End-to-End Research Run</h2>
+  <p>Figure&nbsp;9 traces a single run across all services, showing the asynchronous hand-off through
+  Kafka and the live event stream back to the browser.</p>
+  <figure>
+    <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs><marker id="a8" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
+      <!-- lifelines -->
+      <g font-size="8.5" font-weight="700" fill="#fff">
+        <rect x="20" y="20" width="86" height="26" rx="5" fill="#2b50d8"/><text x="63" y="37" text-anchor="middle">Browser</text>
+        <rect x="160" y="20" width="86" height="26" rx="5" fill="#1b2f7a"/><text x="203" y="37" text-anchor="middle">Django API</text>
+        <rect x="300" y="20" width="86" height="26" rx="5" fill="#1b2f7a"/><text x="343" y="37" text-anchor="middle">Kafka</text>
+        <rect x="440" y="20" width="86" height="26" rx="5" fill="#0fb5a6"/><text x="483" y="37" text-anchor="middle">Worker</text>
+        <rect x="580" y="20" width="120" height="26" rx="5" fill="#0a7d72"/><text x="640" y="37" text-anchor="middle">Claude / Search</text>
+      </g>
+      <g stroke="#c4ccda" stroke-width="1" stroke-dasharray="3 3">
+        <line x1="63" y1="46" x2="63" y2="345"/><line x1="203" y1="46" x2="203" y2="345"/><line x1="343" y1="46" x2="343" y2="345"/><line x1="483" y1="46" x2="483" y2="345"/><line x1="640" y1="46" x2="640" y2="345"/>
+      </g>
+      <g font-size="7.5" fill="#1a2233">
+        <line x1="63" y1="66" x2="201" y2="66" stroke="#3c4858" stroke-width="1.3" marker-end="url(#a8)"/><text x="70" y="61">POST /runs</text>
+        <line x1="203" y1="86" x2="341" y2="86" stroke="#3c4858" stroke-width="1.3" marker-end="url(#a8)"/><text x="210" y="81">produce job</text>
+        <line x1="201" y1="106" x2="65" y2="106" stroke="#3c4858" stroke-width="1.3" marker-end="url(#a8)"/><text x="78" y="101">201 run_id</text>
+        <line x1="63" y1="126" x2="201" y2="126" stroke="#e8833a" stroke-width="1.3" marker-end="url(#a8)"/><text x="70" y="121" fill="#b5421a">GET /stream (SSE)</text>
+        <line x1="343" y1="146" x2="481" y2="146" stroke="#3c4858" stroke-width="1.3" marker-end="url(#a8)"/><text x="350" y="141">consume job</text>
+        <line x1="483" y1="170" x2="638" y2="170" stroke="#0a7d72" stroke-width="1.3" marker-end="url(#a8)"/><text x="490" y="165" fill="#0a7d72">plan + tool calls</text>
+        <line x1="638" y1="190" x2="485" y2="190" stroke="#0a7d72" stroke-width="1.3" marker-end="url(#a8)"/><text x="500" y="185" fill="#0a7d72">results</text>
+        <line x1="483" y1="214" x2="345" y2="214" stroke="#2b50d8" stroke-width="1.3" marker-end="url(#a8)"/><text x="352" y="209" fill="#1b2f7a">progress events</text>
+        <line x1="343" y1="234" x2="205" y2="234" stroke="#2b50d8" stroke-width="1.3" marker-end="url(#a8)"/>
+        <line x1="201" y1="254" x2="65" y2="254" stroke="#e8833a" stroke-width="1.3" marker-end="url(#a8)"/><text x="78" y="249" fill="#b5421a">SSE: step…</text>
+        <text x="483" y="280" text-anchor="middle" fill="#6b7685">↻ loop until grounded</text>
+        <line x1="483" y1="300" x2="345" y2="300" stroke="#1b2f7a" stroke-width="1.3" marker-end="url(#a8)"/><text x="352" y="295" fill="#1b2f7a">produce result</text>
+        <line x1="343" y1="320" x2="205" y2="320" stroke="#1b2f7a" stroke-width="1.3" marker-end="url(#a8)"/>
+        <line x1="201" y1="340" x2="65" y2="340" stroke="#0fb5a6" stroke-width="1.3" marker-end="url(#a8)"/><text x="78" y="335" fill="#0a7d72">SSE: completed → report</text>
+      </g>
+    </svg>
+    <figcaption><span class="fig-num">Figure 9.</span> Sequence diagram of an end-to-end research run with asynchronous job hand-off and live SSE progress.</figcaption>
+  </figure>
+
+  <h2>7.4&nbsp;&nbsp;Run State Machine</h2>
+  <figure>
+    <svg viewBox="0 0 700 110" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs><marker id="a9" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
+      <rect x="20" y="40" width="100" height="34" rx="17" fill="#6b7685"/><text x="70" y="61" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">QUEUED</text>
+      <rect x="180" y="40" width="100" height="34" rx="17" fill="#2b50d8"/><text x="230" y="61" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">RUNNING</text>
+      <rect x="340" y="10" width="120" height="32" rx="16" fill="#0fb5a6"/><text x="400" y="30" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">COMPLETED</text>
+      <rect x="340" y="72" width="120" height="32" rx="16" fill="#b5421a"/><text x="400" y="92" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">FAILED</text>
+      <rect x="520" y="40" width="120" height="34" rx="17" fill="#e8833a"/><text x="580" y="61" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">CANCELLED</text>
+      <line x1="120" y1="57" x2="178" y2="57" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a9)"/>
+      <line x1="280" y1="50" x2="338" y2="32" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a9)"/>
+      <line x1="280" y1="64" x2="338" y2="84" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a9)"/>
+      <line x1="280" y1="57" x2="518" y2="57" stroke="#3c4858" stroke-width="1.4" marker-end="url(#a9)"/>
+      <path d="M400,104 C400,118 230,118 230,76" fill="none" stroke="#3c4858" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#a9)"/><text x="300" y="118" font-size="7" fill="#6b7685">retry</text>
+    </svg>
+    <figcaption><span class="fig-num">Figure 10.</span> Lifecycle state machine for a research run.</figcaption>
+  </figure>
+
+  <div class="runfoot"><span>7 — Use Cases &amp; Behavioural Models</span><span class="pageno"></span></div>
+</section>
+<!-- ============ 8. NON-FUNCTIONAL ============ -->
+<section class="page">
+  <div class="runhead"><span>8 — Non-Functional Requirements</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>8&nbsp;&nbsp;Non-Functional Requirements</h1>
+  <p class="lead">Quality attributes are as important as functions for a production system. Each NFR below
+  is measurable and testable.</p>
+
+  <h2>8.1&nbsp;&nbsp;Performance &amp; Scalability</h2>
+  <table>
+    <tr><th style="width:26mm">ID</th><th>Requirement</th><th style="width:20mm">Target</th></tr>
+    <tr><td class="req-id">NFR-PERF-1</td><td>API read endpoints (95th percentile) under nominal load.</td><td>&lt; 200 ms</td></tr>
+    <tr><td class="req-id">NFR-PERF-2</td><td>Run submission acknowledgement returned to client.</td><td>&lt; 300 ms</td></tr>
+    <tr><td class="req-id">NFR-PERF-3</td><td>Progress-event delivery latency (emit → browser).</td><td>&lt; 1 s</td></tr>
+    <tr><td class="req-id">NFR-PERF-4</td><td>Throughput scales linearly by adding worker replicas to the consumer group.</td><td>Linear</td></tr>
+    <tr><td class="req-id">NFR-PERF-5</td><td>The system sustains a backlog of queued runs without data loss when workers are saturated.</td><td>No loss</td></tr>
+  </table>
+
+  <h2>8.2&nbsp;&nbsp;Reliability &amp; Availability</h2>
+  <table>
+    <tr><th style="width:26mm">ID</th><th>Requirement</th><th style="width:20mm">Target</th></tr>
+    <tr><td class="req-id">NFR-REL-1</td><td>Service availability (web + API tier), monthly.</td><td>≥ 99.5%</td></tr>
+    <tr><td class="req-id">NFR-REL-2</td><td>Kafka delivery semantics for jobs and results.</td><td>At-least-once</td></tr>
+    <tr><td class="req-id">NFR-REL-3</td><td>Event handlers are idempotent so reprocessing causes no duplicate side effects.</td><td>Idempotent</td></tr>
+    <tr><td class="req-id">NFR-REL-4</td><td>A crashed worker's in-flight job is re-delivered to another consumer.</td><td>Auto-recover</td></tr>
+    <tr><td class="req-id">NFR-REL-5</td><td>Persistent state survives pod restarts via durable volumes.</td><td>Durable</td></tr>
+  </table>
+
+  <h2>8.3&nbsp;&nbsp;Security &amp; Privacy</h2>
+  <table>
+    <tr><th style="width:26mm">ID</th><th>Requirement</th><th style="width:20mm">Priority</th></tr>
+    <tr><td class="req-id">NFR-SEC-1</td><td>All external traffic shall be encrypted in transit (TLS).</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">NFR-SEC-2</td><td>Passwords shall be hashed with a strong adaptive algorithm; secrets shall never be logged or committed.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">NFR-SEC-3</td><td>Authorisation shall enforce per-user data isolation on every resource access.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">NFR-SEC-4</td><td>Inputs shall be validated and the API shall be protected against injection, XSS and CSRF per OWASP ASVS.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">NFR-SEC-5</td><td>LLM prompts shall guard against prompt-injection from retrieved/web content influencing tool use unsafely.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">NFR-SEC-6</td><td>Rate limiting shall protect authentication and submission endpoints.</td><td><span class="tag med">Medium</span></td></tr>
+  </table>
+
+  <h2>8.4&nbsp;&nbsp;Maintainability, Usability &amp; Observability</h2>
+  <table>
+    <tr><th style="width:26mm">ID</th><th>Requirement</th><th style="width:20mm">Priority</th></tr>
+    <tr><td class="req-id">NFR-MNT-1</td><td>Code shall pass automated linting and formatting gates in CI before merge.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">NFR-MNT-2</td><td>Unit + integration test coverage shall meet or exceed an agreed threshold.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">NFR-OBS-1</td><td>Logs shall be structured (JSON) and correlated by <code>run_id</code> across services.</td><td><span class="tag high">High</span></td></tr>
+    <tr><td class="req-id">NFR-OBS-2</td><td>Key metrics (queue depth, run latency, error rate, token spend) shall be exported for dashboards/alerts.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">NFR-USE-1</td><td>The UI shall meet WCAG 2.1 AA and be fully keyboard-operable.</td><td><span class="tag med">Medium</span></td></tr>
+    <tr><td class="req-id">NFR-PORT-1</td><td>Every service shall run identically in local Docker Compose and in Kubernetes via the same images.</td><td><span class="tag high">High</span></td></tr>
+  </table>
+
+  <div class="runfoot"><span>8 — Non-Functional Requirements</span><span class="pageno"></span></div>
+</section>
+
+<!-- ============ 9. DEPLOYMENT ============ -->
+<section class="page">
+  <div class="runhead"><span>9 — Deployment &amp; Infrastructure</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>9&nbsp;&nbsp;Deployment &amp; Infrastructure</h1>
+
+  <h2>9.1&nbsp;&nbsp;Containerisation</h2>
+  <p>Every service ships as an immutable OCI image built from a minimal, multi-stage Dockerfile.
+  Development uses Docker Compose to bring up the full stack on one host; production uses the same
+  images on Kubernetes. This image parity (NFR-PORT-1) eliminates "works on my machine" drift.</p>
+
+  <h2>9.2&nbsp;&nbsp;Kubernetes Topology</h2>
+  <p>Stateless tiers (frontend, API, worker) are <code>Deployments</code> with multiple replicas behind
+  <code>Services</code>; ingress terminates TLS and routes by path. The worker <code>Deployment</code>
+  carries a <code>HorizontalPodAutoscaler</code> keyed on Kafka consumer lag, so backlog drives scale-out.
+  Stateful services (Postgres, Kafka, Qdrant, Redis) run as <code>StatefulSets</code> with
+  <code>PersistentVolumeClaims</code>. Figure&nbsp;11 shows the cluster.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 350" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <rect x="14" y="14" width="692" height="322" rx="12" fill="#f7f9fc" stroke="#1b2f7a" stroke-width="1.5"/>
+      <text x="30" y="34" font-size="11" font-weight="800" fill="#1b2f7a">Kubernetes Cluster</text>
+      <!-- ingress -->
+      <rect x="40" y="50" width="120" height="40" rx="8" fill="#2b50d8"/><text x="100" y="70" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">Ingress</text><text x="100" y="83" text-anchor="middle" font-size="7.5" fill="#cdd8ff">TLS · routing</text>
+      <!-- stateless deployments -->
+      <rect x="40" y="120" width="300" height="90" rx="10" fill="#fff" stroke="#2b50d8" stroke-dasharray="4 3"/>
+      <text x="52" y="138" font-size="8.5" font-weight="700" fill="#1b2f7a">Stateless Deployments (HPA)</text>
+      <rect x="54" y="148" width="86" height="50" rx="7" fill="#eef2ff" stroke="#2b50d8"/><text x="97" y="168" text-anchor="middle" font-size="8" font-weight="700">Frontend</text><text x="97" y="182" text-anchor="middle" font-size="7" fill="#6b7685">×2</text>
+      <rect x="148" y="148" width="86" height="50" rx="7" fill="#eef2ff" stroke="#2b50d8"/><text x="191" y="168" text-anchor="middle" font-size="8" font-weight="700">API</text><text x="191" y="182" text-anchor="middle" font-size="7" fill="#6b7685">×3</text>
+      <rect x="242" y="148" width="86" height="50" rx="7" fill="#e6f6f3" stroke="#0fb5a6"/><text x="285" y="165" text-anchor="middle" font-size="8" font-weight="700" fill="#0a7d72">Worker</text><text x="285" y="178" text-anchor="middle" font-size="7" fill="#0a7d72">×N (autoscaled)</text><text x="285" y="190" text-anchor="middle" font-size="6.5" fill="#6b7685">on Kafka lag</text>
+      <!-- stateful -->
+      <rect x="380" y="120" width="316" height="200" rx="10" fill="#fff" stroke="#6b7685" stroke-dasharray="4 3"/>
+      <text x="392" y="138" font-size="8.5" font-weight="700" fill="#3c4858">StatefulSets + PersistentVolumeClaims</text>
+      <rect x="394" y="148" width="140" height="44" rx="7" fill="#1b2f7a"/><text x="464" y="168" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Kafka</text><text x="464" y="182" text-anchor="middle" font-size="7" fill="#c7d2ff">PVC</text>
+      <rect x="544" y="148" width="140" height="44" rx="7" fill="#0a7d72"/><text x="614" y="168" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Qdrant</text><text x="614" y="182" text-anchor="middle" font-size="7" fill="#bfeee7">PVC</text>
+      <rect x="394" y="206" width="140" height="44" rx="7" fill="#2b50d8"/><text x="464" y="226" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">PostgreSQL</text><text x="464" y="240" text-anchor="middle" font-size="7" fill="#cdd8ff">PVC</text>
+      <rect x="544" y="206" width="140" height="44" rx="7" fill="#e8833a"/><text x="614" y="226" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Redis</text><text x="614" y="240" text-anchor="middle" font-size="7" fill="#ffe6cf">PVC</text>
+      <rect x="394" y="264" width="290" height="44" rx="7" fill="#f1f3f6" stroke="#6b7685"/><text x="539" y="284" text-anchor="middle" font-size="8.5" font-weight="700" fill="#3c4858">Secrets · ConfigMaps · Service Accounts</text><text x="539" y="298" text-anchor="middle" font-size="7" fill="#6b7685">API keys, DB creds injected at runtime</text>
+      <!-- HPA + observ -->
+      <rect x="40" y="232" width="300" height="76" rx="10" fill="#fff" stroke="#e8833a" stroke-dasharray="4 3"/>
+      <text x="52" y="250" font-size="8.5" font-weight="700" fill="#b5421a">Platform services</text>
+      <rect x="54" y="258" width="135" height="40" rx="7" fill="#fff3df" stroke="#e8833a"/><text x="121" y="276" text-anchor="middle" font-size="8" font-weight="700" fill="#9a5d12">HPA</text><text x="121" y="289" text-anchor="middle" font-size="7" fill="#9a5d12">scale on lag</text>
+      <rect x="197" y="258" width="135" height="40" rx="7" fill="#f1f3f6" stroke="#6b7685"/><text x="264" y="276" text-anchor="middle" font-size="8" font-weight="700" fill="#3c4858">Metrics + Logs</text><text x="264" y="289" text-anchor="middle" font-size="7" fill="#6b7685">dashboards · alerts</text>
+    </svg>
+    <figcaption><span class="fig-num">Figure 11.</span> Kubernetes topology — stateless Deployments with autoscaling, StatefulSets for data, and secret/config injection.</figcaption>
+  </figure>
+
+  <h2>9.3&nbsp;&nbsp;Environments &amp; Configuration</h2>
+  <table>
+    <tr><th>Environment</th><th>Purpose</th><th>Notes</th></tr>
+    <tr><td><strong>Local</strong></td><td>Development &amp; debugging.</td><td>Docker Compose, single host, hot reload.</td></tr>
+    <tr><td><strong>Staging</strong></td><td>Pre-production validation.</td><td>Kubernetes namespace mirroring prod; seeded data.</td></tr>
+    <tr><td><strong>Production</strong></td><td>Live workloads.</td><td>Autoscaling, alerting, backups, restricted secrets.</td></tr>
+  </table>
+  <p>All configuration is supplied through environment variables, ConfigMaps and Secrets — never baked
+  into images — satisfying the twelve-factor configuration principle.</p>
+
+  <div class="runfoot"><span>9 — Deployment &amp; Infrastructure</span><span class="pageno"></span></div>
+</section>
+<!-- ============ 10. CI/CD ============ -->
+<section class="page">
+  <div class="runhead"><span>10 — CI/CD &amp; DevOps</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>10&nbsp;&nbsp;CI/CD &amp; DevOps</h1>
+
+  <h2>10.1&nbsp;&nbsp;Delivery Pipeline</h2>
+  <p>Every push triggers an automated pipeline (GitHub Actions). Code is linted and tested, container
+  images are built and scanned, and — on the main branch — deployed to staging and then promoted to
+  production. A failure at any gate blocks promotion. Figure&nbsp;12 shows the stages.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs><marker id="a10" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3c4858"/></marker></defs>
+      <g>
+        <rect x="14" y="50" width="92" height="48" rx="8" fill="#fff" stroke="#2b50d8"/><text x="60" y="70" text-anchor="middle" font-size="8.5" font-weight="700">Commit / PR</text><text x="60" y="84" text-anchor="middle" font-size="7" fill="#6b7685">push</text>
+        <rect x="130" y="50" width="92" height="48" rx="8" fill="#eef2ff" stroke="#2b50d8"/><text x="176" y="68" text-anchor="middle" font-size="8.5" font-weight="700">Lint + Test</text><text x="176" y="82" text-anchor="middle" font-size="7" fill="#6b7685">unit · integ · evals</text>
+        <rect x="246" y="50" width="92" height="48" rx="8" fill="#eef2ff" stroke="#2b50d8"/><text x="292" y="68" text-anchor="middle" font-size="8.5" font-weight="700">Build image</text><text x="292" y="82" text-anchor="middle" font-size="7" fill="#6b7685">multi-stage</text>
+        <rect x="362" y="50" width="92" height="48" rx="8" fill="#fff3df" stroke="#e8833a"/><text x="408" y="68" text-anchor="middle" font-size="8.5" font-weight="700" fill="#9a5d12">Scan + Push</text><text x="408" y="82" text-anchor="middle" font-size="7" fill="#9a5d12">registry</text>
+        <rect x="478" y="50" width="92" height="48" rx="8" fill="#e6f6f3" stroke="#0fb5a6"/><text x="524" y="68" text-anchor="middle" font-size="8.5" font-weight="700" fill="#0a7d72">Deploy staging</text><text x="524" y="82" text-anchor="middle" font-size="7" fill="#0a7d72">smoke test</text>
+        <rect x="594" y="50" width="110" height="48" rx="8" fill="#1b2f7a"/><text x="649" y="68" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Promote prod</text><text x="649" y="82" text-anchor="middle" font-size="7" fill="#c7d2ff">rolling update</text>
+      </g>
+      <g stroke="#3c4858" stroke-width="1.4">
+        <line x1="106" y1="74" x2="128" y2="74" marker-end="url(#a10)"/>
+        <line x1="222" y1="74" x2="244" y2="74" marker-end="url(#a10)"/>
+        <line x1="338" y1="74" x2="360" y2="74" marker-end="url(#a10)"/>
+        <line x1="454" y1="74" x2="476" y2="74" marker-end="url(#a10)"/>
+        <line x1="570" y1="74" x2="592" y2="74" marker-end="url(#a10)"/>
+      </g>
+      <text x="176" y="120" text-anchor="middle" font-size="7" fill="#b5421a">✕ fail → block</text>
+      <text x="408" y="120" text-anchor="middle" font-size="7" fill="#b5421a">✕ vuln → block</text>
+    </svg>
+    <figcaption><span class="fig-num">Figure 12.</span> Continuous-integration and continuous-delivery pipeline with quality gates.</figcaption>
+  </figure>
+
+  <table>
+    <tr><th>Stage</th><th>Gate</th><th>Outcome on failure</th></tr>
+    <tr><td>Lint &amp; format</td><td>ruff / eslint clean</td><td>Pipeline fails; PR cannot merge.</td></tr>
+    <tr><td>Tests</td><td>Unit + integration + agent evals pass; coverage ≥ threshold</td><td>Pipeline fails.</td></tr>
+    <tr><td>Image build</td><td>Reproducible multi-stage build</td><td>Pipeline fails.</td></tr>
+    <tr><td>Image scan</td><td>No high/critical CVEs</td><td>Promotion blocked.</td></tr>
+    <tr><td>Deploy staging</td><td>Smoke test green</td><td>Auto-rollback; promotion blocked.</td></tr>
+    <tr><td>Promote prod</td><td>Manual approval (optional) + rolling update health</td><td>Auto-rollback to previous revision.</td></tr>
+  </table>
+
+  <div class="callout info"><b>DevOps story for evaluators.</b> The pipeline demonstrates the full
+  software-delivery lifecycle: quality gates, container supply-chain scanning, environment promotion,
+  zero-downtime rolling deployments and automatic rollback — the operational maturity expected of a
+  production GenAI service.</div>
+
+  <div class="runfoot"><span>10 — CI/CD &amp; DevOps</span><span class="pageno"></span></div>
+</section>
+
+<!-- ============ 11. QA ============ -->
+<section class="page">
+  <div class="runhead"><span>11 — Quality Assurance &amp; Evaluation</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>11&nbsp;&nbsp;Quality Assurance &amp; Evaluation</h1>
+
+  <h2>11.1&nbsp;&nbsp;Test Strategy</h2>
+  <table>
+    <tr><th>Level</th><th>Scope</th><th>Tooling</th></tr>
+    <tr><td><strong>Unit</strong></td><td>Pure functions, serializers, chunking, citation parsing.</td><td>pytest, vitest</td></tr>
+    <tr><td><strong>Integration</strong></td><td>API ↔ DB, producer ↔ Kafka ↔ consumer, retrieval ↔ Qdrant.</td><td>pytest + testcontainers</td></tr>
+    <tr><td><strong>Contract</strong></td><td>Kafka event schemas and REST responses against fixtures.</td><td>schema validation</td></tr>
+    <tr><td><strong>End-to-end</strong></td><td>Submit → stream → report in an ephemeral stack.</td><td>Playwright</td></tr>
+    <tr><td><strong>Load</strong></td><td>Backlog absorption and worker autoscaling under burst.</td><td>k6 / Locust</td></tr>
+    <tr><td><strong>Agent evals</strong></td><td>Quality of agent output on a curated question set.</td><td>custom eval harness</td></tr>
+  </table>
+
+  <h2>11.2&nbsp;&nbsp;Agent Evaluation (GenAI-specific)</h2>
+  <p>Because the agent is probabilistic, traditional assertions are insufficient. A dedicated, versioned
+  evaluation suite scores each release against a held-out set of questions with known good answers and
+  sources. The suite runs in CI and gates promotion.</p>
+  <table>
+    <tr><th>Metric</th><th>Definition</th><th>Goal</th></tr>
+    <tr><td><strong>Faithfulness</strong></td><td>Fraction of report claims supported by a cited source.</td><td>Maximise</td></tr>
+    <tr><td><strong>Citation validity</strong></td><td>Fraction of citations that resolve and substantiate their claim.</td><td>Maximise</td></tr>
+    <tr><td><strong>Answer relevance</strong></td><td>Degree to which the report addresses the question.</td><td>Maximise</td></tr>
+    <tr><td><strong>Hallucination rate</strong></td><td>Fraction of claims unsupported or contradicted by evidence.</td><td>Minimise</td></tr>
+    <tr><td><strong>Cost / latency</strong></td><td>Tokens, dollars and wall-clock per run.</td><td>Bound</td></tr>
+  </table>
+
+  <h2>11.3&nbsp;&nbsp;Sample Acceptance Criteria</h2>
+  <table>
+    <tr><th>Req.</th><th>Given / When / Then</th></tr>
+    <tr><td class="req-id">FR-RUN-3</td><td><em>Given</em> a logged-in user, <em>when</em> they submit a valid question, <em>then</em> a QUEUED run is persisted and its id is returned in &lt; 300 ms.</td></tr>
+    <tr><td class="req-id">FR-AGT-5</td><td><em>Given</em> a completed run, <em>when</em> the report is inspected, <em>then</em> every material claim carries at least one resolvable citation.</td></tr>
+    <tr><td class="req-id">FR-STR-1</td><td><em>Given</em> an open SSE stream, <em>when</em> the worker emits a step, <em>then</em> the client renders it within 1 s.</td></tr>
+    <tr><td class="req-id">NFR-REL-4</td><td><em>Given</em> a worker killed mid-run, <em>when</em> the consumer group rebalances, <em>then</em> the job is reprocessed without duplicate side effects.</td></tr>
+  </table>
+
+  <div class="runfoot"><span>11 — Quality Assurance &amp; Evaluation</span><span class="pageno"></span></div>
+</section>
+
+<!-- ============ 12. APPENDICES ============ -->
+<section class="page">
+  <div class="runhead"><span>12 — Appendices</span><span>DeepResearch SRS v1.0</span></div>
+  <h1>12&nbsp;&nbsp;Appendices</h1>
+
+  <h2>Appendix A — Technology Stack Summary</h2>
+  <table>
+    <tr><th>Concern</th><th>Choice</th><th>Rationale</th></tr>
+    <tr><td>LLM / reasoning</td><td>Anthropic Claude API</td><td>Strong tool-use and long-context agentic behaviour.</td></tr>
+    <tr><td>API</td><td>Django + DRF, SimpleJWT</td><td>Batteries-included, mature auth, rapid delivery.</td></tr>
+    <tr><td>Frontend</td><td>React + Vite</td><td>Fast SPA with first-class streaming UX.</td></tr>
+    <tr><td>Messaging</td><td>Apache Kafka (KRaft)</td><td>Durable, partitioned, scalable event backbone.</td></tr>
+    <tr><td>Vector store</td><td>Qdrant</td><td>Performant similarity search with metadata filtering.</td></tr>
+    <tr><td>Cache / fan-out</td><td>Redis</td><td>Low-latency pub/sub for SSE and caching.</td></tr>
+    <tr><td>Database</td><td>PostgreSQL</td><td>Reliable relational system of record.</td></tr>
+    <tr><td>Containers</td><td>Docker</td><td>Reproducible, portable builds.</td></tr>
+    <tr><td>Orchestration</td><td>Kubernetes</td><td>Self-healing, autoscaling, declarative ops.</td></tr>
+    <tr><td>CI/CD</td><td>GitHub Actions</td><td>Automated gates and delivery.</td></tr>
+  </table>
+
+  <h2>Appendix B — Requirements Traceability (excerpt)</h2>
+  <table>
+    <tr><th>Requirement</th><th>Architecture</th><th>Use case</th><th>Test</th></tr>
+    <tr><td class="req-id">FR-RUN-3</td><td>§3.1, §3.4</td><td>UC-2</td><td>Integration, E2E</td></tr>
+    <tr><td class="req-id">FR-AGT-5</td><td>§3.3</td><td>UC-2</td><td>Agent eval (faithfulness)</td></tr>
+    <tr><td class="req-id">FR-RAG-3</td><td>§3.5</td><td>UC-4</td><td>Integration (Qdrant)</td></tr>
+    <tr><td class="req-id">FR-STR-1</td><td>§3.2, §4.3</td><td>UC-3</td><td>E2E (SSE latency)</td></tr>
+    <tr><td class="req-id">NFR-PERF-4</td><td>§9.2</td><td>—</td><td>Load (autoscale)</td></tr>
+  </table>
+
+  <h2>Appendix C — Future Enhancements</h2>
+  <ul>
+    <li>Multi-agent collaboration (planner / researcher / critic specialisation).</li>
+    <li>Org-level multi-tenancy with role-based access control.</li>
+    <li>Additional source connectors (academic databases, internal wikis).</li>
+    <li>Human-in-the-loop review and report annotation.</li>
+    <li>Multilingual research and reporting.</li>
+  </ul>
+
+  <h2>Appendix D — Glossary cross-reference</h2>
+  <p>See §1.5 for definitions of Agent, RAG, Embedding, Vector Store, Tool Use, SSE, JWT and related
+  terms used throughout this specification.</p>
+
+  <div class="callout note"><b>End of document.</b> This SRS, version 1.0, is baselined for
+  implementation. Changes are governed by the project's pull-request review process and reflected in the
+  revision history on the Document Control page.</div>
+
+  <div class="runfoot"><span>12 — Appendices &nbsp;·&nbsp; End of Document</span><span class="pageno"></span></div>
+</section>
+</body>
+</html>
