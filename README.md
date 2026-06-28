@@ -16,7 +16,7 @@ microservices, async messaging, containerization, orchestration, CI/CD, and eval
 ```
 React (Vite)  ──HTTP / SSE──►  Django + DRF ──produce──►  Kafka  ──consume──►  Agent Worker(s)
      ▲                              │   ▲                   topics                   │
-     │                          Postgres  │             (jobs, events)      Claude API + Web Search
+     │                           MySQL    │             (jobs, events)      Claude API + Web Search
      └──── live progress ◄── Redis ◄──────┴───────── progress events ◄───────────────┘
                                                                        Qdrant (RAG vector store)
 ```
@@ -30,7 +30,7 @@ React (Vite)  ──HTTP / SSE──►  Django + DRF ──produce──►  Ka
 | LLM              | Claude (Anthropic API)                | Reasoning, tool use, synthesis                          |
 | RAG store        | Qdrant                                | Vector search over uploaded documents                  |
 | Cache / fan-out  | Redis                                 | Caching + SSE/WebSocket progress fan-out               |
-| Database         | PostgreSQL                            | Source of truth                                        |
+| Database         | MySQL 8                               | Source of truth                                        |
 | Containerization | Docker / docker-compose               | Local dev, every service containerized                 |
 | Orchestration    | Kubernetes                            | Production deploy, independent worker scaling          |
 | CI/CD            | GitHub Actions                        | Lint → test → build images → deploy                    |
@@ -60,7 +60,7 @@ research-agent/
 
 ```bash
 cp .env.example .env          # then add your ANTHROPIC_API_KEY
-docker compose up --build     # boots postgres, qdrant, kafka, redis, backend, worker, frontend
+docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, worker, frontend
 ```
 
 | Service   | URL                       |
@@ -73,9 +73,9 @@ docker compose up --build     # boots postgres, qdrant, kafka, redis, backend, w
 
 ## Build phases
 
-- [ ] **Phase 0** — Monorepo skeleton + docker-compose  ← *current*
-- [ ] **Phase 1** — Django API + JWT auth + Postgres models
-- [ ] **Phase 2** — Agent worker (Claude tool-use loop)
+- [x] **Phase 0** — Monorepo skeleton + docker-compose
+- [x] **Phase 1** — Django API + JWT auth + MySQL models
+- [ ] **Phase 2** — Agent worker (Claude tool-use loop)  ← *current*
 - [ ] **Phase 3** — Kafka wiring + Redis SSE streaming
 - [ ] **Phase 4** — React UI
 - [ ] **Phase 5** — RAG with Qdrant
@@ -85,6 +85,40 @@ docker compose up --build     # boots postgres, qdrant, kafka, redis, backend, w
 
 ---
 
+## Backend API (Phase 1)
+
+The Django + DRF API lives in `backend/`. Run it locally against a MySQL
+instance (defaults assume user `root`, database `research`):
+
+```bash
+cd backend
+python -m venv .venv && source .venv/Scripts/activate   # Windows
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+Endpoints are versioned under `/api/v1`:
+
+| Method & Path                     | Auth | Purpose                                  |
+|-----------------------------------|------|------------------------------------------|
+| `POST /auth/register`             | —    | Create an account                        |
+| `POST /auth/token`                | —    | Obtain JWT access + refresh tokens       |
+| `POST /auth/token/refresh`        | JWT  | Rotate the access token                  |
+| `GET  /auth/me`                   | JWT  | Current user profile                     |
+| `POST /runs`                      | JWT  | Submit a question → `QUEUED` run         |
+| `GET  /runs`                      | JWT  | List the caller's runs (newest first)    |
+| `GET  /runs/{id}`                 | JWT  | Fetch a run and its report               |
+| `POST /runs/{id}/cancel`          | JWT  | Cancel a `QUEUED`/`RUNNING` run          |
+| `POST /documents`                 | JWT  | Upload a document for RAG ingestion      |
+| `GET  /documents`                 | JWT  | List the caller's documents              |
+| `GET  /health`                    | —    | Liveness/readiness probe                 |
+
+Run the test suite with `python manage.py test`.
+
+---
+
 ## Status
 
-🚧 Phase 0 — scaffolding. See checklist above.
+🚧 Phase 1 complete — API, JWT auth and the relational data model are in place.
+Next up: the agent worker (Phase 2).

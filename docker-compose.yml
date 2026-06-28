@@ -1,19 +1,19 @@
 services:
-  postgres:
-    image: postgres:16-alpine
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-research}
-      POSTGRES_USER: ${POSTGRES_USER:-research}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-research}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-research}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root@123}
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-research}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root@123}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -56,7 +56,7 @@ services:
     environment:
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-insecure-key}
       - DJANGO_DEBUG=${DJANGO_DEBUG:-1}
-      - DATABASE_URL=postgres://${POSTGRES_USER:-research}:${POSTGRES_PASSWORD:-research}@postgres:5432/${POSTGRES_DB:-research}
+      - DATABASE_URL=mysql://root:root%40123@mysql:3306/${MYSQL_DATABASE:-research}
       - REDIS_URL=redis://redis:6379/0
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - QDRANT_URL=http://qdrant:6333
@@ -64,7 +64,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -77,7 +77,7 @@ services:
     build: ./worker
     command: python -m worker.main
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER:-research}:${POSTGRES_PASSWORD:-research}@postgres:5432/${POSTGRES_DB:-research}
+      - DATABASE_URL=mysql://root:root%40123@mysql:3306/${MYSQL_DATABASE:-research}
       - REDIS_URL=redis://redis:6379/0
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - QDRANT_URL=http://qdrant:6333
@@ -85,7 +85,7 @@ services:
     depends_on:
       kafka:
         condition: service_started
-      postgres:
+      mysql:
         condition: service_healthy
     volumes:
       - ./worker:/app
@@ -102,6 +102,6 @@ services:
       - /app/node_modules
 
 volumes:
-  pgdata:
+  mysqldata:
   qdrantdata:
   kafkadata:
