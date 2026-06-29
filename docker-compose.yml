@@ -95,6 +95,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      qdrant:
+        condition: service_started
     volumes:
       - ./worker:/app/worker
       - ./backend:/app/backend

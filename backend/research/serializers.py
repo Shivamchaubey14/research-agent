@@ -87,8 +87,11 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         upload = validated_data.pop("file")
+        # Persist the bytes (FileField) so the worker can ingest them; the run
+        # stays PROCESSING until ingestion completes (FR-RAG-6).
         return Document.objects.create(
             user=self.context["request"].user,
+            file=upload,
             filename=upload.name,
             content_type=getattr(upload, "content_type", "") or "",
             size_bytes=upload.size,

@@ -9,4 +9,7 @@ PyMySQL==1.1.1
 dj-database-url==2.1.0
 kafka-python==2.0.2
 redis==5.0.4
-# Phase 5 adds qdrant-client here for RAG retrieval.
+# RAG ingestion: Qdrant client with local fastembed embeddings (no API key) and
+# pypdf for extracting text from uploaded PDFs.
+qdrant-client[fastembed]==1.9.1
+pypdf>=4.0

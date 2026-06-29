@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 RESEARCH_JOBS_TOPIC = "research.jobs"
 RESEARCH_JOBS_DLQ = "research.jobs.dlq"
+DOCUMENTS_INGEST_TOPIC = "documents.ingest"
 CONSUMER_GROUP = "research-workers"
 
 _producer = None
@@ -52,8 +53,8 @@ def publish_job(topic, key, payload):
     future.get(timeout=10)
 
 
-def get_consumer(topic, group_id=CONSUMER_GROUP):
-    """Return a JSON consumer for ``topic`` in ``group_id``.
+def get_consumer(*topics, group_id=CONSUMER_GROUP):
+    """Return a JSON consumer subscribed to ``topics`` in ``group_id``.
 
     Offsets auto-commit: the handler owns error recovery (mark FAILED + DLQ),
     so an exception must not wedge the partition by replaying forever.
@@ -61,7 +62,7 @@ def get_consumer(topic, group_id=CONSUMER_GROUP):
     from kafka import KafkaConsumer
 
     return KafkaConsumer(
-        topic,
+        *topics,
         bootstrap_servers=_bootstrap_servers(),
         group_id=group_id,
         value_deserializer=lambda v: json.loads(v.decode("utf-8")),

@@ -17,9 +17,14 @@ from worker import django_bootstrap
 load_dotenv()
 django_bootstrap.setup()
 
-from research.messaging import RESEARCH_JOBS_TOPIC, get_consumer  # noqa: E402
+from research.messaging import (  # noqa: E402
+    DOCUMENTS_INGEST_TOPIC,
+    RESEARCH_JOBS_TOPIC,
+    get_consumer,
+)
 
 from worker.config import Settings  # noqa: E402
+from worker.ingest import ingest_document  # noqa: E402
 from worker.runner import process_job  # noqa: E402
 
 logger = logging.getLogger("worker.main")
@@ -29,18 +34,20 @@ def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     settings = Settings.from_env()
 
-    consumer = get_consumer(RESEARCH_JOBS_TOPIC)
-    logger.info("worker listening on %s", RESEARCH_JOBS_TOPIC)
+    topics = (RESEARCH_JOBS_TOPIC, DOCUMENTS_INGEST_TOPIC)
+    consumer = get_consumer(*topics)
+    logger.info("worker listening on %s", ", ".join(topics))
     try:
         for message in consumer:
-            job = message.value
-            logger.info("job received", extra={"run_id": job.get("run_id")})
-            # process_job records its own failures; the guard is a backstop so a
-            # single bad message can never take the consumer down.
+            # Both handlers record their own failures; the guard is a backstop so
+            # a single bad message can never take the consumer down.
             try:
-                process_job(job, settings)
+                if message.topic == RESEARCH_JOBS_TOPIC:
+                    process_job(message.value, settings)
+                elif message.topic == DOCUMENTS_INGEST_TOPIC:
+                    ingest_document(message.value)
             except Exception:  # pragma: no cover - defensive
-                logger.exception("unhandled error processing job")
+                logger.exception("unhandled error processing %s message", message.topic)
     finally:
         consumer.close()
     return 0
