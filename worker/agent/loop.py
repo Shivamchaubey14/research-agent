@@ -17,6 +17,8 @@ from worker.agent.llm import LLM, Usage
 from worker.agent.schema import Plan, ReportDraft
 from worker.config import (
     AGENT_POLICY_VERSION,
+    DOCUMENT_SEARCH_TOOL_NAME,
+    RAG_TOP_K,
     WEB_SEARCH_TOOL_NAME,
     WEB_SEARCH_TOOL_TYPE,
     DepthProfile,
@@ -43,6 +45,27 @@ class AgentResult:
 
 # Callback returning True if the run should stop at the next checkpoint.
 CancelCheck = Callable[[], bool]
+# Callback (query, top_k) -> list of {text, doc_ref, filename, score}. Injected
+# by the runner so the agent stays free of Django/Qdrant imports. None disables
+# document search (web-only run).
+Retriever = Callable[[str, int], list]
+
+# Client-side tool exposed to the model when a retriever is available.
+_DOCUMENT_SEARCH_TOOL = {
+    "name": DOCUMENT_SEARCH_TOOL_NAME,
+    "description": (
+        "Search the user's uploaded documents for passages relevant to a query. "
+        "Returns excerpts, each with a source reference (doc_ref). Use this to "
+        "ground answers in the user's own files, alongside web search."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string", "description": "What to look for."}
+        },
+        "required": ["query"],
+    },
+}
 
 
 class ResearchAgent:
@@ -51,11 +74,13 @@ class ResearchAgent:
         settings: Settings,
         emitter: Optional[ProgressEmitter] = None,
         should_cancel: Optional[CancelCheck] = None,
+        retriever: Optional[Retriever] = None,
     ):
         self._settings = settings
         self._llm = LLM(settings.anthropic_api_key, settings.model)
         self._emitter = emitter or events.LoggingEmitter()
         self._should_cancel = should_cancel or (lambda: False)
+        self._retriever = retriever
 
     # -- public API ---------------------------------------------------------
 
@@ -107,7 +132,12 @@ class ResearchAgent:
         return plan
 
     def _research(self, question, plan, profile, started):
-        """Drive the web-search tool loop; return (evidence digest, sources)."""
+        """Drive the search tool loop; return (evidence digest, sources).
+
+        Always has web search (a server tool); when a retriever is injected it
+        also offers a client-side ``document_search`` tool over the user's
+        uploaded documents, executing those calls and feeding results back.
+        """
         tools = [
             {
                 "type": WEB_SEARCH_TOOL_TYPE,
@@ -115,6 +145,9 @@ class ResearchAgent:
                 "max_uses": profile.max_search_uses,
             }
         ]
+        if self._retriever is not None:
+            tools.append(_DOCUMENT_SEARCH_TOOL)
+
         messages = [
             {
                 "role": "user",
@@ -124,6 +157,7 @@ class ResearchAgent:
         digest_parts: list[str] = []
         sources: list[dict] = []
         seen_urls: set[str] = set()
+        seen_refs: set[str] = set()
 
         for turn in range(profile.max_research_turns):
             if self._budget_exhausted(profile, started):
@@ -144,6 +178,16 @@ class ResearchAgent:
             if message.stop_reason == "pause_turn":
                 # Server-side tool loop hit its limit; re-send to resume.
                 continue
+            if message.stop_reason == "tool_use":
+                # The model called the client-side document_search tool; run it,
+                # return the results, and let it continue.
+                tool_results = self._run_document_search(
+                    message.content, digest_parts, sources, seen_refs
+                )
+                if tool_results:
+                    messages.append({"role": "user", "content": tool_results})
+                    continue
+                break  # nothing we can answer — avoid looping forever
             # end_turn / max_tokens / refusal: the research stage is done.
             break
 
@@ -151,10 +195,7 @@ class ResearchAgent:
 
     def _synthesize(self, question, digest, sources, profile) -> ReportDraft:
         self._emit(events.VERIFICATION, "Synthesising and grounding the report")
-        source_lines = "\n".join(
-            f"[{i}] {s.get('title') or s['url']} - {s['url']}"
-            for i, s in enumerate(sources, 1)
-        )
+        source_lines = "\n".join(_format_source(i, s) for i, s in enumerate(sources, 1))
         evidence = (
             f"{prompts.synthesis_user_prompt(question)}\n\n"
             f"--- Evidence digest ---\n{digest or '(no evidence gathered)'}\n\n"
@@ -193,6 +234,44 @@ class ResearchAgent:
             elif btype == "web_search_tool_result":
                 self._harvest_results(block, sources, seen_urls)
 
+    def _run_document_search(self, content, digest_parts, sources, seen_refs):
+        """Execute document_search tool calls; return tool_result blocks.
+
+        Harvests retrieved passages into the evidence digest and the source list
+        (kind="document"), and returns one tool_result per tool_use block."""
+        tool_results = []
+        for block in content:
+            if getattr(block, "type", None) != "tool_use":
+                continue
+            if block.name != DOCUMENT_SEARCH_TOOL_NAME:
+                continue
+            query = (block.input or {}).get("query", "")
+            self._emit(events.SEARCH, f"Searching documents: {query}", query=query)
+            hits = self._retriever(query, RAG_TOP_K) or []
+
+            lines = []
+            for hit in hits:
+                ref = hit.get("doc_ref", "")
+                lines.append(f"[{ref}] ({hit.get('filename', '')}) {hit.get('text', '')}")
+                if ref and ref not in seen_refs:
+                    seen_refs.add(ref)
+                    sources.append(
+                        {"kind": "document", "doc_ref": ref, "filename": hit.get("filename", "")}
+                    )
+                    digest_parts.append(f"[doc {ref}] {hit.get('text', '')}")
+            self._emit(
+                events.OBSERVATION, f"Found {len(hits)} document passage(s)", new_sources=len(hits)
+            )
+            tool_results.append(
+                {
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": "\n\n".join(lines)
+                    or "No matching passages found in the user's documents.",
+                }
+            )
+        return tool_results
+
     def _harvest_results(self, block, sources, seen_urls):
         results = getattr(block, "content", None)
         # An error surfaces as a single object, not a list (FR-AGT-8).
@@ -230,3 +309,9 @@ class ResearchAgent:
 
 def _preview(text: str, limit: int = 200) -> str:
     return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+def _format_source(i: int, s: dict) -> str:
+    if s.get("kind") == "document":
+        return f"[{i}] document: {s.get('filename', '')} (doc_ref {s.get('doc_ref', '')})"
+    return f"[{i}] {s.get('title') or s.get('url', '')} - {s.get('url', '')}"

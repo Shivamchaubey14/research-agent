@@ -13,12 +13,13 @@ from django.utils import timezone
 
 from research import streaming
 from research.messaging import RESEARCH_JOBS_DLQ, publish_job
-from research.models import Citation, Report, ResearchRun
+from research.models import Citation, Document, Report, ResearchRun
 
 from worker.agent import ResearchAgent
 from worker.agent.loop import RunCancelled
 from worker.bus import RedisProgressEmitter
-from worker.config import Settings
+from worker.config import RAG_TOP_K, Settings
+from worker.rag import store
 
 logger = logging.getLogger("worker.runner")
 
@@ -48,6 +49,7 @@ def process_job(job: dict, settings: Settings) -> None:
         settings,
         emitter=RedisProgressEmitter(run_id),
         should_cancel=lambda: _cancel_requested(run_id),
+        retriever=_build_retriever(run.user_id),
     )
 
     try:
@@ -58,6 +60,17 @@ def process_job(job: dict, settings: Settings) -> None:
         _finalize_failed(run, exc, job)
     else:
         _persist_success(run, result)
+
+
+def _build_retriever(user_id):
+    """Return a Qdrant-backed document retriever, or None if the user has no
+    ingested documents (keeps web-only runs unchanged — FR-RAG-3)."""
+    has_docs = Document.objects.filter(
+        user_id=user_id, status=Document.Status.READY
+    ).exists()
+    if not has_docs:
+        return None
+    return lambda query, top_k=RAG_TOP_K: store.search(user_id, query, top_k)
 
 
 def _cancel_requested(run_id) -> bool:
@@ -109,6 +122,7 @@ def _citation_rows(report, citations):
                 kind=kind,
                 title=c.title[:512],
                 url=c.url[:1024],
+                doc_ref=c.doc_ref[:255],
                 snippet=c.snippet,
             )
         )

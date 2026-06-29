@@ -34,7 +34,11 @@ class Citation(BaseModel):
     marker: int = Field(description="Inline citation number, e.g. 1 for [1].")
     kind: str = Field(default="web", description='Either "web" or "document".')
     title: str = ""
-    url: str = ""
+    url: str = Field(default="", description="The source URL for a web citation.")
+    doc_ref: str = Field(
+        default="",
+        description='For a document citation, its reference, e.g. "1a2b#3".',
+    )
     snippet: str = Field(
         default="", description="Short quote/excerpt that supports the claim."
     )

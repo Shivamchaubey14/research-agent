@@ -55,3 +55,43 @@ def upsert_chunks(document_id, user_id, filename, chunks, client=None) -> int:
         ids=ids,
     )
     return len(chunks)
+
+
+def search(user_id, query, top_k, client=None) -> list[dict]:
+    """Return the top-k chunks most relevant to ``query``, scoped to ``user_id``.
+
+    Scoping by a ``user_id`` payload filter enforces that a user only ever
+    retrieves their own documents (FR-RAG-3, FR-AUTH-5). Returns [] if the
+    collection does not exist yet (no documents ingested).
+    """
+    client = client or get_client()
+    from qdrant_client import models as qmodels
+
+    try:
+        hits = client.query(
+            collection_name=QDRANT_COLLECTION,
+            query_text=query,
+            query_filter=qmodels.Filter(
+                must=[
+                    qmodels.FieldCondition(
+                        key="user_id", match=qmodels.MatchValue(value=user_id)
+                    )
+                ]
+            ),
+            limit=top_k,
+        )
+    except Exception:
+        return []
+
+    results = []
+    for hit in hits:
+        meta = getattr(hit, "metadata", None) or {}
+        results.append(
+            {
+                "text": meta.get("text", getattr(hit, "document", "") or ""),
+                "doc_ref": meta.get("doc_ref", ""),
+                "filename": meta.get("filename", ""),
+                "score": getattr(hit, "score", 0.0),
+            }
+        )
+    return results
