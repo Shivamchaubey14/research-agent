@@ -75,8 +75,8 @@ docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, work
 
 - [x] **Phase 0** — Monorepo skeleton + docker-compose
 - [x] **Phase 1** — Django API + JWT auth + MySQL models
-- [ ] **Phase 2** — Agent worker (Claude tool-use loop)  ← *current*
-- [ ] **Phase 3** — Kafka wiring + Redis SSE streaming
+- [x] **Phase 2** — Agent worker (Claude tool-use loop)
+- [ ] **Phase 3** — Kafka wiring + Redis SSE streaming  ← *current*
 - [ ] **Phase 4** — React UI
 - [ ] **Phase 5** — RAG with Qdrant
 - [ ] **Phase 6** — Evals + observability
@@ -118,7 +118,35 @@ Run the test suite with `python manage.py test`.
 
 ---
 
+## Agent worker (Phase 2)
+
+The autonomous research agent lives in `worker/`. It runs a Claude tool-use loop
+— **plan** the sub-questions, **search** the web, **verify** claims against
+sources, **cite** them — and emits a structured progress event for every step.
+Output is a structured report (summary + sections + citations) that maps onto
+the `Report`/`Citation` models.
+
+It uses Claude (Opus 4.8) with adaptive thinking and the Anthropic web-search
+server tool; research depth (`quick`/`standard`/`deep`) controls the iteration,
+search and token/wall-clock budgets. Run a single research job from the CLI:
+
+```bash
+cd worker
+python -m venv .venv && source .venv/Scripts/activate   # Windows
+pip install -r requirements.txt
+export ANTHROPIC_API_KEY=sk-ant-...                      # or put it in .env
+python -m worker.main "Compare Kafka and RabbitMQ for an event queue" --depth deep
+```
+
+Progress events stream to stderr; the final cited report (with token usage and
+cost) prints to stdout. In Phase 3 `worker.main` becomes a Kafka consumer of
+`research.jobs` that drives the `ResearchRun` lifecycle and fans progress out
+over Redis — the agent loop itself stays unchanged.
+
+---
+
 ## Status
 
-🚧 Phase 1 complete — API, JWT auth and the relational data model are in place.
-Next up: the agent worker (Phase 2).
+🚧 Phases 0–2 complete — API + JWT auth, the relational data model, and the
+agent worker (plan → search → verify → cite) are in place. Next up: Kafka
+wiring and Redis SSE streaming (Phase 3).

@@ -1,0 +1,5 @@
+anthropic>=0.69.0
+pydantic>=2.0
+python-dotenv==1.0.1
+# Phase 3 will add kafka-python and redis here for job consumption and
+# progress fan-out; Phase 5 adds qdrant-client for RAG retrieval.
