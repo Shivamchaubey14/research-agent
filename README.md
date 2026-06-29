@@ -78,8 +78,8 @@ docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, work
 - [x] **Phase 2** — Agent worker (Claude tool-use loop)
 - [x] **Phase 3** — Kafka wiring + Redis SSE streaming
 - [x] **Phase 4** — React UI
-- [ ] **Phase 5** — RAG with Qdrant  ← *current*
-- [ ] **Phase 6** — Evals + observability
+- [x] **Phase 5** — RAG with Qdrant
+- [ ] **Phase 6** — Evals + observability  ← *current*
 - [ ] **Phase 7** — Dockerfiles → CI/CD → Kubernetes
 - [ ] **Phase 8** — Live deploy + polish
 
@@ -200,9 +200,31 @@ Runs by users with no documents are unchanged (web only).
 
 ---
 
+## Observability (Phase 6)
+
+Both tiers log **structured JSON**, one event per line, correlated by `run_id`
+so a single run can be traced across the API and worker (NFR-OBS-1, FR-ADM-2).
+
+Operational endpoints:
+
+| Method & Path                 | Auth  | Purpose                                                   |
+|-------------------------------|-------|----------------------------------------------------------|
+| `GET /health`                 | —     | Liveness — process up + database reachable               |
+| `GET /ready`                  | —     | Readiness — per-dependency check (DB, Redis, Kafka, Qdrant) |
+| `GET /admin/metrics`          | staff | Run counts, queue depth, error rate, avg latency, token spend, cost, worker heartbeat |
+| `GET /admin/runs?status=`     | staff | Inspect runs across users (defaults to `FAILED`)         |
+
+`/ready` returns 503 only if the database is down; other dependencies are
+reported as `degraded` so a transient Qdrant/Kafka blip doesn't pull the API
+out of rotation. The worker writes a heartbeat to Redis that `/admin/metrics`
+surfaces (FR-ADM-1,3,4, NFR-OBS-2).
+
+---
+
 ## Status
 
-🚧 Phases 0–4 complete — API + JWT auth, the relational data model, the agent
+🚧 Phases 0–5 complete — API + JWT auth, the relational data model, the agent
 worker (plan → search → verify → cite), async job dispatch with live SSE
-streaming, and the React UI are in place, plus RAG document ingestion into
-Qdrant (Phase 5a). Next up: agent-side retrieval over uploaded documents.
+streaming, the React UI, and full RAG (document ingestion + agent retrieval) are
+in place, plus structured logging and operational endpoints (Phase 6a). Next up:
+the agent evaluation harness.

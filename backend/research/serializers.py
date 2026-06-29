@@ -46,6 +46,20 @@ class RunDetailSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class AdminRunSerializer(serializers.ModelSerializer):
+    """Operator view of a run across all users, for failure inspection (FR-ADM-4)."""
+
+    user_email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        model = ResearchRun
+        fields = [
+            "id", "user_email", "question", "depth", "status", "error",
+            "total_tokens", "cost_usd", "created_at", "started_at", "ended_at",
+        ]
+        read_only_fields = fields
+
+
 class RunCreateSerializer(serializers.ModelSerializer):
     """Submission payload (FR-RUN-1, FR-RUN-2)."""
 

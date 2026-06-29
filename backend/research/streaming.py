@@ -113,3 +113,24 @@ def _sse_frame(event_id, fields) -> str:
 def heartbeat_frame() -> str:
     """An SSE comment line that keeps the connection alive through proxies."""
     return ": keepalive\n\n"
+
+
+_HEALTH_KEY = "health:worker"
+_HEALTH_TTL = 120  # seconds; metrics treats a missing key as "worker not seen"
+
+
+def worker_heartbeat(timestamp: str, client=None) -> None:
+    """Record that the worker is alive (read by the metrics endpoint, FR-ADM-3)."""
+    client = client or get_redis()
+    try:
+        client.set(_HEALTH_KEY, timestamp, ex=_HEALTH_TTL)
+    except Exception:  # pragma: no cover - best effort
+        logger.debug("failed to write worker heartbeat")
+
+
+def worker_last_seen(client=None):
+    client = client or get_redis()
+    try:
+        return client.get(_HEALTH_KEY)
+    except Exception:  # pragma: no cover
+        return None
