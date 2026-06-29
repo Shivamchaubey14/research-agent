@@ -8,6 +8,8 @@ Kafka/Redis stack, use :mod:`worker.cli` instead.
     python -m worker.main
 """
 import logging
+import os
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 
@@ -17,6 +19,8 @@ from worker import django_bootstrap
 load_dotenv()
 django_bootstrap.setup()
 
+from common.logging import configure_logging  # noqa: E402
+from research import streaming  # noqa: E402
 from research.messaging import (  # noqa: E402
     DOCUMENTS_INGEST_TOPIC,
     RESEARCH_JOBS_TOPIC,
@@ -30,15 +34,22 @@ from worker.runner import process_job  # noqa: E402
 logger = logging.getLogger("worker.main")
 
 
+def _heartbeat() -> None:
+    streaming.worker_heartbeat(datetime.now(timezone.utc).isoformat())
+
+
 def main() -> int:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    # Same structured JSON logging as the API (NFR-OBS-1).
+    configure_logging(os.environ.get("LOG_LEVEL", "INFO"))
     settings = Settings.from_env()
 
     topics = (RESEARCH_JOBS_TOPIC, DOCUMENTS_INGEST_TOPIC)
     consumer = get_consumer(*topics)
-    logger.info("worker listening on %s", ", ".join(topics))
+    _heartbeat()
+    logger.info("worker listening", extra={"topics": list(topics)})
     try:
         for message in consumer:
+            _heartbeat()
             # Both handlers record their own failures; the guard is a backstop so
             # a single bad message can never take the consumer down.
             try:
@@ -47,7 +58,7 @@ def main() -> int:
                 elif message.topic == DOCUMENTS_INGEST_TOPIC:
                     ingest_document(message.value)
             except Exception:  # pragma: no cover - defensive
-                logger.exception("unhandled error processing %s message", message.topic)
+                logger.exception("unhandled error processing message", extra={"topic": message.topic})
     finally:
         consumer.close()
     return 0

@@ -1,8 +1,17 @@
 from django.db import transaction
+from django.db.models import (
+    Avg,
+    Count,
+    DurationField,
+    ExpressionWrapper,
+    F,
+    Sum,
+)
 from django.http import StreamingHttpResponse
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -11,6 +20,7 @@ from . import streaming
 from .models import Document, ResearchRun
 from .permissions import IsOwner
 from .serializers import (
+    AdminRunSerializer,
     DocumentSerializer,
     RunCreateSerializer,
     RunDetailSerializer,
@@ -162,3 +172,64 @@ class DocumentListCreateView(generics.ListCreateAPIView):
         document = serializer.save()
         # Dispatch ingestion only after the row + file are committed (FR-RAG-2).
         transaction.on_commit(lambda: enqueue_document(document))
+
+
+class AdminMetricsView(APIView):
+    """GET /api/v1/admin/metrics — operational metrics (FR-ADM-3, NFR-OBS-2)."""
+
+    permission_classes = [IsAdminUser]
+    throttle_classes = []
+
+    def get(self, request):
+        runs = ResearchRun.objects
+        by_status = {
+            row["status"]: row["n"]
+            for row in runs.values("status").annotate(n=Count("id"))
+        }
+        S = ResearchRun.Status
+        finished = sum(by_status.get(s, 0) for s in (S.COMPLETED, S.FAILED, S.CANCELLED))
+        failed = by_status.get(S.FAILED, 0)
+
+        # Average wall-clock latency of completed runs.
+        latency = (
+            runs.filter(status=S.COMPLETED, started_at__isnull=False, ended_at__isnull=False)
+            .annotate(
+                d=ExpressionWrapper(F("ended_at") - F("started_at"), output_field=DurationField())
+            )
+            .aggregate(avg=Avg("d"))["avg"]
+        )
+
+        totals = runs.aggregate(tokens=Sum("total_tokens"), cost=Sum("cost_usd"))
+        return Response(
+            {
+                "runs": {
+                    "total": sum(by_status.values()),
+                    "by_status": by_status,
+                    "queue_depth": by_status.get(S.QUEUED, 0),
+                    "running": by_status.get(S.RUNNING, 0),
+                },
+                "error_rate": round(failed / finished, 4) if finished else 0.0,
+                "avg_run_latency_seconds": latency.total_seconds() if latency else None,
+                "token_spend": int(totals["tokens"] or 0),
+                "cost_usd": float(totals["cost"] or 0),
+                "worker_last_seen": streaming.worker_last_seen(),
+            }
+        )
+
+
+class AdminRunListView(generics.ListAPIView):
+    """GET /api/v1/admin/runs — inspect runs across users, FAILED first (FR-ADM-4).
+
+    Defaults to failed runs; pass ``?status=`` to filter to any status.
+    """
+
+    permission_classes = [IsAdminUser]
+    serializer_class = AdminRunSerializer
+    throttle_classes = []
+
+    def get_queryset(self):
+        status_filter = self.request.query_params.get("status", ResearchRun.Status.FAILED)
+        qs = ResearchRun.objects.select_related("user")
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
