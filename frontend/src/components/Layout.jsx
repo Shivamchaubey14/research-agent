@@ -19,7 +19,7 @@ export default function Layout() {
         </Link>
         <span className="spacer" />
         {user && <span className="who">{user.email}</span>}
-        <button className="ghost" onClick={handleLogout}>
+        <button className="signout" onClick={handleLogout}>
           Sign out
         </button>
       </header>
