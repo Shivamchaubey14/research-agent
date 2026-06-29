@@ -1,10 +1,13 @@
 from django.db import transaction
+from django.http import StreamingHttpResponse
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from . import streaming
 from .models import Document, ResearchRun
 from .permissions import IsOwner
 from .serializers import (
@@ -14,6 +17,15 @@ from .serializers import (
     RunListSerializer,
 )
 from .services import enqueue_run
+
+# Maps a terminal run status to the terminal SSE event kind, so a client that
+# subscribes after the run finished (or after the event stream expired) still
+# receives a closing event (FR-STR-4).
+_TERMINAL_EVENT = {
+    ResearchRun.Status.COMPLETED: streaming.COMPLETE,
+    ResearchRun.Status.FAILED: streaming.FAILED,
+    ResearchRun.Status.CANCELLED: streaming.CANCELLED,
+}
 
 
 class RunListCreateView(generics.ListCreateAPIView):
@@ -71,6 +83,69 @@ class RunCancelView(APIView):
         # The worker observes the CANCELLED status and stops at the next safe
         # checkpoint (FR-RUN-5); full cooperative cancellation lands in Phase 3.
         return Response(RunDetailSerializer(run).data)
+
+
+class QueryParamJWTAuthentication(JWTAuthentication):
+    """JWT auth that also accepts ``?token=`` for the SSE endpoint.
+
+    The browser ``EventSource`` API cannot set an ``Authorization`` header, so
+    the access token is passed as a query parameter for this one read-only,
+    owner-scoped endpoint.
+    """
+
+    def authenticate(self, request):
+        header_auth = super().authenticate(request)
+        if header_auth is not None:
+            return header_auth
+        raw = request.query_params.get("token")
+        if not raw:
+            return None
+        token = self.get_validated_token(raw)
+        return self.get_user(token), token
+
+
+class RunEventsView(APIView):
+    """GET /api/v1/runs/{id}/events — live progress over SSE (FR-STR-1..4)."""
+
+    authentication_classes = [QueryParamJWTAuthentication]
+    permission_classes = [*APIView.permission_classes, IsOwner]
+    throttle_classes = []  # a long-lived stream must not be rate-limited
+
+    def get(self, request, pk):
+        run = generics.get_object_or_404(
+            ResearchRun.objects.filter(user=request.user), pk=pk
+        )
+        self.check_object_permissions(request, run)
+
+        # Resume from the last id the client saw (FR-STR-3); else replay all.
+        last_id = request.headers.get("Last-Event-ID") or request.query_params.get(
+            "last_id", "0"
+        )
+        terminal_kind = _TERMINAL_EVENT.get(run.status) if run.is_terminal else None
+
+        response = StreamingHttpResponse(
+            self._frames(run.id, last_id, terminal_kind),
+            content_type="text/event-stream",
+        )
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"  # disable nginx buffering for SSE
+        return response
+
+    @staticmethod
+    def _frames(run_id, last_id, terminal_kind):
+        for kind, frame in streaming.iter_events(run_id, last_id=last_id):
+            if frame is not None:
+                yield frame
+                continue
+            # Idle tick. If the run already finished but its stream carried no
+            # terminal event (e.g. it expired), synthesise one and close.
+            if terminal_kind is not None:
+                yield streaming._sse_frame(
+                    "0-0",
+                    {"kind": terminal_kind, "message": "Run already finished", "data": "{}"},
+                )
+                return
+            yield streaming.heartbeat_frame()
 
 
 class DocumentListCreateView(generics.ListCreateAPIView):

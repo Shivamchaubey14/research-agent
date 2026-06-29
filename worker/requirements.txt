@@ -1,5 +1,12 @@
 anthropic>=0.69.0
 pydantic>=2.0
 python-dotenv==1.0.1
-# Phase 3 will add kafka-python and redis here for job consumption and
-# progress fan-out; Phase 5 adds qdrant-client for RAG retrieval.
+# The worker reuses the backend's Django ORM models (single source of truth for
+# the schema) and the shared messaging/streaming helpers, so it pulls in the
+# same Django + driver + Kafka/Redis stack as the API.
+Django==5.0.6
+PyMySQL==1.1.1
+dj-database-url==2.1.0
+kafka-python==2.0.2
+redis==5.0.4
+# Phase 5 adds qdrant-client here for RAG retrieval.
