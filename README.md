@@ -77,8 +77,8 @@ docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, work
 - [x] **Phase 1** — Django API + JWT auth + MySQL models
 - [x] **Phase 2** — Agent worker (Claude tool-use loop)
 - [x] **Phase 3** — Kafka wiring + Redis SSE streaming
-- [ ] **Phase 4** — React UI  ← *current*
-- [ ] **Phase 5** — RAG with Qdrant
+- [x] **Phase 4** — React UI
+- [ ] **Phase 5** — RAG with Qdrant  ← *current*
 - [ ] **Phase 6** — Evals + observability
 - [ ] **Phase 7** — Dockerfiles → CI/CD → Kubernetes
 - [ ] **Phase 8** — Live deploy + polish
@@ -162,8 +162,27 @@ of truth.
 
 ---
 
+## Frontend (Phase 4)
+
+A React + Vite single-page app in `frontend/`: email/password auth (JWT with
+silent refresh), a question/depth submission form, a run-history list, and a run
+view that streams the agent's steps live over SSE and renders the final cited
+report. It subscribes to `GET /runs/{id}/events` via `EventSource` (token passed
+as a query parameter) and refetches the run for the report on the terminal
+event.
+
+```bash
+cd frontend
+npm install
+# API base defaults to http://localhost:8000/api; override with VITE_API_URL
+npm run dev          # http://localhost:5173
+```
+
+---
+
 ## Status
 
-🚧 Phases 0–3 complete — API + JWT auth, the relational data model, the agent
-worker (plan → search → verify → cite), and async job dispatch with live SSE
-streaming are in place. Next up: the React UI (Phase 4).
+🚧 Phases 0–4 complete — API + JWT auth, the relational data model, the agent
+worker (plan → search → verify → cite), async job dispatch with live SSE
+streaming, and the React UI are in place. Next up: RAG over uploaded documents
+with Qdrant (Phase 5).
