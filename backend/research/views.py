@@ -16,7 +16,7 @@ from .serializers import (
     RunDetailSerializer,
     RunListSerializer,
 )
-from .services import enqueue_run
+from .services import enqueue_document, enqueue_run
 
 # Maps a terminal run status to the terminal SSE event kind, so a client that
 # subscribes after the run finished (or after the event stream expired) still
@@ -157,3 +157,8 @@ class DocumentListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return Document.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        document = serializer.save()
+        # Dispatch ingestion only after the row + file are committed (FR-RAG-2).
+        transaction.on_commit(lambda: enqueue_document(document))

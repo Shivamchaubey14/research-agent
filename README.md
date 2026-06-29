@@ -162,6 +162,22 @@ of truth.
 
 ---
 
+## RAG ingestion (Phase 5)
+
+Uploading a document (`POST /documents`) persists the file and publishes a
+`documents.ingest` job. The worker consumes it (alongside research jobs),
+extracts the text (PDF via `pypdf`; TXT/Markdown directly), splits it into
+overlapping chunks, embeds them locally with **fastembed** (`bge-small-en-v1.5`,
+no embedding API key), and upserts them into a **Qdrant** collection. Each chunk
+keeps a `user_id` (so retrieval can be scoped to the owner) and a resolvable
+`document_id#chunk_index` reference back to its source. The document's status
+moves `processing → ready` (or `failed`) with its chunk count (FR-RAG-1,2,5,6).
+
+Retrieval — giving the agent a document-search tool that queries this collection
+scoped to the user — is the next step (FR-RAG-3,4).
+
+---
+
 ## Status
 
 🚧 Phases 0–3 complete — API + JWT auth, the relational data model, the agent
