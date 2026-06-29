@@ -26,6 +26,9 @@ for something, say so plainly rather than asserting it.
 a second source.
 - Note the source (title and URL) alongside each finding so it can be cited \
 later.
+- If a document search tool is available, the user has uploaded their own \
+documents — search them too and treat relevant passages as first-class sources \
+alongside the web, keeping each passage's reference for citation.
 - Be efficient: stop searching once you have enough evidence to answer the \
 question well. Do not pad with marginal searches.
 
@@ -43,6 +46,9 @@ Rules:
 Drop or explicitly hedge any claim you cannot ground in a source (FR-AGT-6).
 - Cite inline with bracketed markers ([1], [2], ...) that correspond to the \
 citation list; number citations in order of first appearance.
+- For a web source set kind to "web" and include its url. For a user document \
+set kind to "document" and include the doc_ref shown in the sources list (e.g. \
+1a2b#3), leaving url empty.
 - The summary must directly answer the original question.
 - Write neutral, precise prose. Do not invent sources, URLs, or facts that are \
 not in the gathered evidence.\

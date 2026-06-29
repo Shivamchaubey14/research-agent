@@ -23,6 +23,10 @@ EMBED_MODEL = "BAAI/bge-small-en-v1.5"  # 384-dim, small + fast
 CHUNK_SIZE = 900  # characters per chunk
 CHUNK_OVERLAP = 150  # overlap between consecutive chunks
 
+# Agent-side document retrieval (FR-RAG-3).
+DOCUMENT_SEARCH_TOOL_NAME = "document_search"
+RAG_TOP_K = 5  # chunks returned per document search
+
 # Per-million-token prices (USD) used for cost accounting (FR-RUN-6).
 # Cache writes bill at 1.25x input, cache reads at 0.1x input.
 MODEL_PRICING = {

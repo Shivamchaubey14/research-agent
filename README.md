@@ -187,12 +187,16 @@ Uploading a document (`POST /documents`) persists the file and publishes a
 extracts the text (PDF via `pypdf`; TXT/Markdown directly), splits it into
 overlapping chunks, embeds them locally with **fastembed** (`bge-small-en-v1.5`,
 no embedding API key), and upserts them into a **Qdrant** collection. Each chunk
-keeps a `user_id` (so retrieval can be scoped to the owner) and a resolvable
+keeps a `user_id` (so retrieval is scoped to the owner) and a resolvable
 `document_id#chunk_index` reference back to its source. The document's status
 moves `processing → ready` (or `failed`) with its chunk count (FR-RAG-1,2,5,6).
 
-Retrieval — giving the agent a document-search tool that queries this collection
-scoped to the user — is the next step (FR-RAG-3,4).
+When a run's user has ingested documents, the agent is given a client-side
+`document_search` tool alongside web search: it embeds the query, retrieves the
+top-k most relevant chunks from Qdrant (filtered to that user — FR-RAG-3), and
+folds them into the evidence as first-class sources. Document-backed claims are
+cited with `kind="document"` and the chunk's `doc_ref` (FR-RAG-4, FR-RPT-2).
+Runs by users with no documents are unchanged (web only).
 
 ---
 
