@@ -126,6 +126,8 @@ class Document(models.Model):
         on_delete=models.CASCADE,
         related_name="documents",
     )
+    # The stored upload; the worker reads this to parse, chunk and embed it.
+    file = models.FileField(upload_to="documents/", blank=True)
     filename = models.CharField(max_length=255)
     content_type = models.CharField(max_length=100, blank=True)
     size_bytes = models.PositiveBigIntegerField(default=0)

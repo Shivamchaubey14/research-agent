@@ -15,6 +15,14 @@ AGENT_POLICY_VERSION = "2026.06.1"
 WEB_SEARCH_TOOL_TYPE = "web_search_20260209"
 WEB_SEARCH_TOOL_NAME = "web_search"
 
+# RAG ingestion (FR-RAG-2). Embeddings run locally via fastembed (no API key);
+# one shared Qdrant collection holds every user's chunks, scoped at query time
+# by a user_id payload filter (FR-RAG-3, FR-AUTH-5).
+QDRANT_COLLECTION = "documents"
+EMBED_MODEL = "BAAI/bge-small-en-v1.5"  # 384-dim, small + fast
+CHUNK_SIZE = 900  # characters per chunk
+CHUNK_OVERLAP = 150  # overlap between consecutive chunks
+
 # Per-million-token prices (USD) used for cost accounting (FR-RUN-6).
 # Cache writes bill at 1.25x input, cache reads at 0.1x input.
 MODEL_PRICING = {

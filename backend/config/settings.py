@@ -137,6 +137,17 @@ SIMPLE_JWT = {
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
+# Qdrant vector store for RAG over uploaded documents (FR-RAG-2/3).
+QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
+
+# --- Media (uploaded documents) ---------------------------------------------
+# Uploaded files are written here by the API and read by the worker's ingestion
+# pipeline. Locally both run from the repo so MEDIA_ROOT is shared; in
+# docker-compose the backend bind mount makes the same directory visible to the
+# worker (a shared volume / object store is the production equivalent).
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # --- CORS -------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"

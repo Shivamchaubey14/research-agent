@@ -180,9 +180,25 @@ npm run dev          # http://localhost:5173
 
 ---
 
+## RAG ingestion (Phase 5)
+
+Uploading a document (`POST /documents`) persists the file and publishes a
+`documents.ingest` job. The worker consumes it (alongside research jobs),
+extracts the text (PDF via `pypdf`; TXT/Markdown directly), splits it into
+overlapping chunks, embeds them locally with **fastembed** (`bge-small-en-v1.5`,
+no embedding API key), and upserts them into a **Qdrant** collection. Each chunk
+keeps a `user_id` (so retrieval can be scoped to the owner) and a resolvable
+`document_id#chunk_index` reference back to its source. The document's status
+moves `processing → ready` (or `failed`) with its chunk count (FR-RAG-1,2,5,6).
+
+Retrieval — giving the agent a document-search tool that queries this collection
+scoped to the user — is the next step (FR-RAG-3,4).
+
+---
+
 ## Status
 
 🚧 Phases 0–4 complete — API + JWT auth, the relational data model, the agent
 worker (plan → search → verify → cite), async job dispatch with live SSE
-streaming, and the React UI are in place. Next up: RAG over uploaded documents
-with Qdrant (Phase 5).
+streaming, and the React UI are in place, plus RAG document ingestion into
+Qdrant (Phase 5a). Next up: agent-side retrieval over uploaded documents.
