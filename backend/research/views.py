@@ -144,6 +144,18 @@ class RunEventsView(APIView):
     @staticmethod
     def _frames(run_id, last_id, terminal_kind):
         for kind, frame in streaming.iter_events(run_id, last_id=last_id):
+            if kind == streaming.STREAM_UNAVAILABLE:
+                # The progress store can't serve streams (e.g. Redis < 5.0).
+                yield streaming._sse_frame(
+                    "0-0",
+                    {
+                        "kind": "error",
+                        "message": "Live progress is unavailable (the progress store "
+                        "does not support streams; Redis 5+ is required).",
+                        "data": "{}",
+                    },
+                )
+                return
             if frame is not None:
                 yield frame
                 continue
