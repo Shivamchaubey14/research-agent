@@ -1,70 +1,48 @@
-"""Worker entrypoint.
+"""Worker entrypoint: consume ``research.jobs`` and run the agent.
 
-In Phase 3 this becomes a Kafka consumer of ``research.jobs`` that updates the
-``ResearchRun`` lifecycle (FR-RUN-4) and fans out progress over Redis. For now
-it drives one research run from the command line so the agent can be exercised
-end to end:
+This is the production path for the worker tier (README architecture). It
+bootstraps Django for ORM access, then consumes research jobs and drives each
+one through :func:`worker.runner.process_job`. To exercise the agent without a
+Kafka/Redis stack, use :mod:`worker.cli` instead.
 
-    python -m worker.main "What are the tradeoffs of Kafka vs RabbitMQ?" --depth deep
+    python -m worker.main
 """
-import argparse
-import json
 import logging
-import sys
 
 from dotenv import load_dotenv
 
-from worker.agent import ResearchAgent
-from worker.agent.events import CallbackEmitter, ProgressEvent
-from worker.config import DEFAULT_DEPTH, DEPTH_PROFILES, Settings
+from worker import django_bootstrap
+
+# Django must be configured before the ORM-backed modules below are imported.
+load_dotenv()
+django_bootstrap.setup()
+
+from research.messaging import RESEARCH_JOBS_TOPIC, get_consumer  # noqa: E402
+
+from worker.config import Settings  # noqa: E402
+from worker.runner import process_job  # noqa: E402
+
+logger = logging.getLogger("worker.main")
 
 
-def _print_event(event: ProgressEvent) -> None:
-    extra = ""
-    if event.data:
-        extra = " " + json.dumps(event.data, default=str)
-    print(f"  [{event.kind:<12}] {event.message}{extra}", file=sys.stderr)
+def main() -> int:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    settings = Settings.from_env()
 
-
-def _render_report(result) -> str:
-    out = ["", "=" * 72, "SUMMARY", "-" * 72, result.report.summary, ""]
-    for section in result.report.sections:
-        out += [section.heading, "-" * len(section.heading), section.content, ""]
-    out.append("SOURCES")
-    out.append("-" * 72)
-    for c in result.report.citations:
-        out.append(f"[{c.marker}] {c.title} {c.url}".rstrip())
-    out += [
-        "",
-        f"tokens={result.usage.total_tokens}  cost=${result.cost_usd:.4f}  "
-        f"policy={result.policy_version}",
-    ]
-    return "\n".join(out)
-
-
-def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Run the DeepResearch agent on a question.")
-    parser.add_argument("question", help="The research question.")
-    parser.add_argument(
-        "--depth",
-        choices=sorted(DEPTH_PROFILES),
-        default=DEFAULT_DEPTH,
-        help="Research depth (FR-RUN-2).",
-    )
-    args = parser.parse_args(argv)
-
-    load_dotenv()
-    logging.basicConfig(level=logging.WARNING, format="%(message)s")
-
+    consumer = get_consumer(RESEARCH_JOBS_TOPIC)
+    logger.info("worker listening on %s", RESEARCH_JOBS_TOPIC)
     try:
-        settings = Settings.from_env()
-    except RuntimeError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
-
-    agent = ResearchAgent(settings, emitter=CallbackEmitter(_print_event))
-    result = agent.run(args.question, depth=args.depth)
-    print(_render_report(result))
+        for message in consumer:
+            job = message.value
+            logger.info("job received", extra={"run_id": job.get("run_id")})
+            # process_job records its own failures; the guard is a backstop so a
+            # single bad message can never take the consumer down.
+            try:
+                process_job(job, settings)
+            except Exception:  # pragma: no cover - defensive
+                logger.exception("unhandled error processing job")
+    finally:
+        consumer.close()
     return 0
 
 

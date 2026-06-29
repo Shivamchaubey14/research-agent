@@ -130,6 +130,13 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
+# --- Messaging + streaming --------------------------------------------------
+# Kafka carries research jobs to the worker tier; Redis carries progress events
+# back out for SSE fan-out (README architecture, FR-STR-1). Defaults target a
+# developer's local stack; docker-compose/K8s inject the service hostnames.
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+
 # --- CORS -------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"

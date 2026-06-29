@@ -76,8 +76,8 @@ docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, work
 - [x] **Phase 0** — Monorepo skeleton + docker-compose
 - [x] **Phase 1** — Django API + JWT auth + MySQL models
 - [x] **Phase 2** — Agent worker (Claude tool-use loop)
-- [ ] **Phase 3** — Kafka wiring + Redis SSE streaming  ← *current*
-- [ ] **Phase 4** — React UI
+- [x] **Phase 3** — Kafka wiring + Redis SSE streaming
+- [ ] **Phase 4** — React UI  ← *current*
 - [ ] **Phase 5** — RAG with Qdrant
 - [ ] **Phase 6** — Evals + observability
 - [ ] **Phase 7** — Dockerfiles → CI/CD → Kubernetes
@@ -109,6 +109,7 @@ Endpoints are versioned under `/api/v1`:
 | `POST /runs`                      | JWT  | Submit a question → `QUEUED` run         |
 | `GET  /runs`                      | JWT  | List the caller's runs (newest first)    |
 | `GET  /runs/{id}`                 | JWT  | Fetch a run and its report               |
+| `GET  /runs/{id}/events`          | JWT  | Live progress over SSE (`?token=` for EventSource) |
 | `POST /runs/{id}/cancel`          | JWT  | Cancel a `QUEUED`/`RUNNING` run          |
 | `POST /documents`                 | JWT  | Upload a document for RAG ingestion      |
 | `GET  /documents`                 | JWT  | List the caller's documents              |
@@ -128,25 +129,41 @@ the `Report`/`Citation` models.
 
 It uses Claude (Opus 4.8) with adaptive thinking and the Anthropic web-search
 server tool; research depth (`quick`/`standard`/`deep`) controls the iteration,
-search and token/wall-clock budgets. Run a single research job from the CLI:
+search and token/wall-clock budgets.
+
+To develop the agent in isolation (no Kafka/Redis), run one job from the CLI —
+progress prints to stderr, the final cited report to stdout:
 
 ```bash
 cd worker
 python -m venv .venv && source .venv/Scripts/activate   # Windows
 pip install -r requirements.txt
 export ANTHROPIC_API_KEY=sk-ant-...                      # or put it in .env
-python -m worker.main "Compare Kafka and RabbitMQ for an event queue" --depth deep
+python -m worker.cli "Compare Kafka and RabbitMQ for an event queue" --depth deep
 ```
 
-Progress events stream to stderr; the final cited report (with token usage and
-cost) prints to stdout. In Phase 3 `worker.main` becomes a Kafka consumer of
-`research.jobs` that drives the `ResearchRun` lifecycle and fans progress out
-over Redis — the agent loop itself stays unchanged.
+---
+
+## Messaging & live streaming (Phase 3)
+
+Submitting a run publishes a job to the Kafka topic `research.jobs`; the worker
+(`python -m worker.main`) consumes it, drives the run through
+`QUEUED → RUNNING → (COMPLETED | FAILED | CANCELLED)` (FR-RUN-4), persists the
+report and citations, and accounts tokens/cost. A terminally failed run is
+routed to `research.jobs.dlq` (FR-RUN-7).
+
+Every agent step is published to a per-run **Redis stream**; the API exposes it
+at `GET /runs/{id}/events` as Server-Sent Events (FR-STR-1..4). Redis streams
+give ordered delivery, a resumable cursor (reconnect with `Last-Event-ID`), and
+history for late subscribers; each run ends with one terminal event. The worker
+reuses the backend's Django ORM and the shared `research.messaging` /
+`research.streaming` helpers so the schema and event format have a single source
+of truth.
 
 ---
 
 ## Status
 
-🚧 Phases 0–2 complete — API + JWT auth, the relational data model, and the
-agent worker (plan → search → verify → cite) are in place. Next up: Kafka
-wiring and Redis SSE streaming (Phase 3).
+🚧 Phases 0–3 complete — API + JWT auth, the relational data model, the agent
+worker (plan → search → verify → cite), and async job dispatch with live SSE
+streaming are in place. Next up: the React UI (Phase 4).
