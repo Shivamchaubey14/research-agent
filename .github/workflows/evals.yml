@@ -1,0 +1,34 @@
+name: Agent evals
+
+# The eval suite calls the Claude API (agent + judge), so it costs money and
+# needs a secret — it runs on demand and on a weekly schedule, not on every PR.
+# The CLI exits non-zero below the promotion thresholds, gating the run.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+
+jobs:
+  evals:
+    name: Run agent eval gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      # The suite runs the agent standalone (web search only) — no Django,
+      # Kafka or Qdrant needed, so install just the agent deps.
+      - name: Install agent dependencies
+        run: pip install "anthropic>=0.69.0" "pydantic>=2.0" python-dotenv
+      - name: Run eval suite (gates on thresholds)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python -m worker.evals evals-results.json
+      - name: Upload scorecard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: evals-results.json
