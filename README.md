@@ -9,6 +9,8 @@ and your uploaded documents, **verifies** claims against sources, and writes a
 Built to demonstrate real production engineering, not just an API call:
 microservices, async messaging, containerization, orchestration, CI/CD, and evals.
 
+[![CI](https://github.com/Shivamchaubey14/research-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Shivamchaubey14/research-agent/actions/workflows/ci.yml)
+
 ---
 
 ## Architecture
@@ -255,8 +257,24 @@ stack (infra + API + worker + frontend):
 - **frontend** — `node:20-alpine` running the Vite dev server.
 
 `.dockerignore` files keep build contexts lean (no `.venv`, `node_modules`,
-`media`, or `.env`). CI/CD (GitHub Actions) and Kubernetes manifests are the
-next slices of this phase.
+`media`, or `.env`).
+
+---
+
+## CI/CD (Phase 7)
+
+GitHub Actions in `.github/workflows/`:
+
+- **`ci.yml`** (every push/PR to `main`): lints with **ruff**, runs Django's
+  system check and the **test suite** against a MySQL service container, builds
+  the **frontend**, and builds all three **Docker images** — so a broken
+  Dockerfile or failing test blocks the merge (NFR-MNT-1/2).
+- **`evals.yml`** (manual + weekly): runs the agent **eval gate**
+  (`python -m worker.evals`) using the `ANTHROPIC_API_KEY` repo secret and
+  uploads the scorecard. It's separate from `ci.yml` because it calls the Claude
+  API (cost + secret); the CLI's exit code gates promotion (§11.2).
+
+Kubernetes manifests (`infra/k8s`) are the remaining slice of this phase.
 
 ---
 

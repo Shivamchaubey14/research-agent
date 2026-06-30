@@ -1,0 +1,5 @@
+# Lint config used locally and in CI (NFR-MNT-1).
+line-length = 100
+extend-exclude = ["**/migrations/*", "**/.venv/*", "**/node_modules/*"]
+# Default rule set (pyflakes + a pragmatic pycodestyle subset): catches unused
+# imports, undefined names and real errors without churning import grouping.
