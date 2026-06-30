@@ -242,6 +242,24 @@ real pipeline; it needs `ANTHROPIC_API_KEY` (agent + judge both call Claude).
 
 ---
 
+## Containerization (Phase 7)
+
+Every service has a Dockerfile, so `docker compose up --build` boots the whole
+stack (infra + API + worker + frontend):
+
+- **backend** — `python:3.13-slim`, installs `requirements.txt`, runs gunicorn
+  (compose overrides with `runserver` for dev).
+- **worker** — built from the **repo root** (`worker/Dockerfile`) because it
+  bundles the backend ORM package it reuses; installs the worker stack
+  (Django + driver, Kafka/Redis, `qdrant-client[fastembed]`, `pypdf`).
+- **frontend** — `node:20-alpine` running the Vite dev server.
+
+`.dockerignore` files keep build contexts lean (no `.venv`, `node_modules`,
+`media`, or `.env`). CI/CD (GitHub Actions) and Kubernetes manifests are the
+next slices of this phase.
+
+---
+
 ## Status
 
 🚧 Phases 0–6 complete — API + JWT auth, the relational data model, the agent

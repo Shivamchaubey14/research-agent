@@ -5,6 +5,12 @@ python-dotenv==1.0.1
 # the schema) and the shared messaging/streaming helpers, so it pulls in the
 # same Django + driver + Kafka/Redis stack as the API.
 Django==5.0.6
+# The worker loads the backend's Django settings, which register these apps in
+# INSTALLED_APPS/MIDDLEWARE, so they must be importable even though the worker
+# serves no HTTP.
+djangorestframework==3.15.1
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
 PyMySQL==1.1.1
 dj-database-url==2.1.0
 kafka-python==3.0.7
