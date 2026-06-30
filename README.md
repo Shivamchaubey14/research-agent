@@ -82,8 +82,8 @@ docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, work
 - [x] **Phase 4** — React UI
 - [x] **Phase 5** — RAG with Qdrant
 - [x] **Phase 6** — Evals + observability
-- [ ] **Phase 7** — Dockerfiles → CI/CD → Kubernetes  ← *current*
-- [ ] **Phase 8** — Live deploy + polish
+- [x] **Phase 7** — Dockerfiles → CI/CD → Kubernetes
+- [ ] **Phase 8** — Live deploy + polish  ← *current*
 
 ---
 
@@ -274,14 +274,23 @@ GitHub Actions in `.github/workflows/`:
   uploads the scorecard. It's separate from `ci.yml` because it calls the Claude
   API (cost + secret); the CLI's exit code gates promotion (§11.2).
 
-Kubernetes manifests (`infra/k8s`) are the remaining slice of this phase.
+## Kubernetes (Phase 7)
+
+Manifests in `infra/k8s/` deploy the whole stack (`kubectl apply -k infra/k8s`):
+the backing infra as StatefulSets/Deployments with PVCs, the API behind a
+Service with `/health` + `/ready` probes and a migrate init container, the
+**worker as its own Deployment with a CPU HorizontalPodAutoscaler** (independent
+scaling), and an nginx Ingress routing `/api` → backend and `/` → frontend with
+SSE buffering disabled. Secrets are placeholders — override before applying. See
+[`infra/k8s/README.md`](infra/k8s/README.md) for prerequisites and steps.
 
 ---
 
 ## Status
 
-🚧 Phases 0–6 complete — API + JWT auth, the relational data model, the agent
+🚧 Phases 0–7 complete — API + JWT auth, the relational data model, the agent
 worker (plan → search → verify → cite), async job dispatch with live SSE
 streaming, the React UI, full RAG (document ingestion + agent retrieval),
-structured logging + operational endpoints, and a gated agent-eval suite are in
-place. Next up: Dockerfiles, CI/CD and Kubernetes (Phase 7).
+structured logging + operational endpoints, a gated agent-eval suite, and the
+full containerization / CI/CD / Kubernetes layer are in place. Next up: live
+deploy + polish (Phase 8).
