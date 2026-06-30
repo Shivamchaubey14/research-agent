@@ -74,7 +74,10 @@ services:
       - ./backend:/app
 
   worker:
-    build: ./worker
+    # Context is the repo root so the image can include the backend ORM package.
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
     command: python -m worker.main
     working_dir: /app
     environment:

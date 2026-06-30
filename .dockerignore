@@ -1,0 +1,15 @@
+# Applies to the worker image build (context = repo root). Keep it to the
+# backend + worker packages; drop everything else.
+.git
+**/.venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+frontend
+docs
+infra
+backend/media
+*.md
+.env
+*.env
+!.env.example
