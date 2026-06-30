@@ -79,8 +79,8 @@ docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, work
 - [x] **Phase 3** — Kafka wiring + Redis SSE streaming
 - [x] **Phase 4** — React UI
 - [x] **Phase 5** — RAG with Qdrant
-- [ ] **Phase 6** — Evals + observability  ← *current*
-- [ ] **Phase 7** — Dockerfiles → CI/CD → Kubernetes
+- [x] **Phase 6** — Evals + observability
+- [ ] **Phase 7** — Dockerfiles → CI/CD → Kubernetes  ← *current*
 - [ ] **Phase 8** — Live deploy + polish
 
 ---
@@ -221,10 +221,31 @@ surfaces (FR-ADM-1,3,4, NFR-OBS-2).
 
 ---
 
+## Agent evaluation (Phase 6)
+
+Because the agent is probabilistic, quality is measured with a versioned eval
+suite rather than fixed assertions (SRS §11.2). It runs the agent over a curated
+question set and scores each report with an **LLM-as-judge** on faithfulness,
+citation validity, answer relevance and hallucination rate, alongside per-run
+cost and latency. The suite mean of each metric is gated against promotion
+thresholds and the command exits non-zero on failure, so CI can block a
+regressing release.
+
+```bash
+cd worker
+python -m worker.evals            # prints a scorecard; exit code gates CI
+python -m worker.evals out.json   # also writes full results
+```
+
+The harness reuses the same `ResearchAgent` the worker runs, so it measures the
+real pipeline; it needs `ANTHROPIC_API_KEY` (agent + judge both call Claude).
+
+---
+
 ## Status
 
-🚧 Phases 0–5 complete — API + JWT auth, the relational data model, the agent
+🚧 Phases 0–6 complete — API + JWT auth, the relational data model, the agent
 worker (plan → search → verify → cite), async job dispatch with live SSE
-streaming, the React UI, and full RAG (document ingestion + agent retrieval) are
-in place, plus structured logging and operational endpoints (Phase 6a). Next up:
-the agent evaluation harness.
+streaming, the React UI, full RAG (document ingestion + agent retrieval),
+structured logging + operational endpoints, and a gated agent-eval suite are in
+place. Next up: Dockerfiles, CI/CD and Kubernetes (Phase 7).
