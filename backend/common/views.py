@@ -76,7 +76,14 @@ def _check_redis():
     try:
         from research.streaming import get_redis
 
-        get_redis().ping()
+        client = get_redis()
+        client.ping()
+        # Live progress needs Redis Streams (5.0+); a reachable but too-old
+        # server (no XLEN) is reported distinctly so the cause is obvious.
+        try:
+            client.xlen("health:stream-probe")
+        except Exception:
+            return "no-streams"
         return "ok"
     except Exception:
         return "unavailable"

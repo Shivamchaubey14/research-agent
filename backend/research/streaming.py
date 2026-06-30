@@ -9,6 +9,7 @@ run. Each run ends with exactly one terminal event (FR-STR-4).
 """
 import json
 import logging
+import time
 
 from django.conf import settings
 
@@ -19,6 +20,10 @@ COMPLETE = "complete"
 FAILED = "failed"
 CANCELLED = "cancelled"
 TERMINAL_KINDS = frozenset({COMPLETE, FAILED, CANCELLED})
+
+# Internal sentinel: the progress store can't serve streams (e.g. Redis < 5.0).
+# The view turns this into a single error event rather than spinning.
+STREAM_UNAVAILABLE = "__stream_unavailable__"
 
 # Cap stream length and expire idle streams so Redis does not grow unbounded.
 _MAX_EVENTS = 2000
@@ -80,11 +85,22 @@ def iter_events(run_id, last_id="0", block_ms=15000, client=None):
     client = client or get_redis()
     key = stream_key(run_id)
     cursor = last_id or "0"
+    errors = 0
     while True:
         try:
             response = client.xread({key: cursor}, count=50, block=block_ms)
-        except Exception:  # pragma: no cover - transient Redis blip
-            logger.warning("redis xread failed", extra={"run_id": str(run_id)})
+            errors = 0
+        except Exception as exc:
+            # A persistent failure (e.g. Redis < 5.0 has no XREAD) must not spin
+            # the loop flooding heartbeats — surface it once and stop.
+            errors += 1
+            logger.warning(
+                "redis stream read failed", extra={"run_id": str(run_id), "error": str(exc)}
+            )
+            if errors >= 3:
+                yield STREAM_UNAVAILABLE, None
+                return
+            time.sleep(1)  # brief back-off for a transient blip
             yield None, None
             continue
 
