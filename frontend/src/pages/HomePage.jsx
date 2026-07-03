@@ -99,15 +99,21 @@ export default function HomePage() {
           />
         </div>
         <div className="row">
-          <div className="field" style={{ flex: "0 0 200px" }}>
-            <label htmlFor="depth">Depth</label>
-            <select id="depth" value={depth} onChange={(e) => setDepth(e.target.value)}>
+          <div className="field">
+            <label>Depth</label>
+            <div className="depth-pills">
               {DEPTHS.map((d) => (
-                <option key={d.value} value={d.value}>
+                <button
+                  type="button"
+                  key={d.value}
+                  className={`chip ${depth === d.value ? "is-active" : ""}`}
+                  aria-pressed={depth === d.value}
+                  onClick={() => setDepth(d.value)}
+                >
                   {d.label}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
           <div style={{ flex: 1 }} />
           <button type="submit" disabled={busy || !question.trim()} style={{ flex: "0 0 auto" }}>
