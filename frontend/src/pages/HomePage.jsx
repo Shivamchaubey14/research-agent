@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { api } from "../api/client.js";
@@ -19,20 +19,51 @@ function when(iso) {
   });
 }
 
+// Local YYYY-MM-DD (not UTC, so the day doesn't shift across timezones).
+function ymd(date) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
+}
+
+// A preset spanning the last `days` days through today (both inclusive).
+function lastDays(days) {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - (days - 1));
+  return { after: ymd(from), before: ymd(to) };
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const [question, setQuestion] = useState("");
   const [depth, setDepth] = useState("standard");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
   const [runs, setRuns] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [after, setAfter] = useState("");
+  const [before, setBefore] = useState("");
+
+  const filtered = Boolean(after || before);
+
+  const loadRuns = useCallback(() => {
+    setLoading(true);
+    api
+      .listRuns({ after, before })
+      .then(setRuns)
+      .catch(() => setRuns([]))
+      .finally(() => setLoading(false));
+  }, [after, before]);
 
   useEffect(() => {
-    api
-      .listRuns()
-      .then(setRuns)
-      .catch(() => setRuns([]));
-  }, []);
+    loadRuns();
+  }, [loadRuns]);
+
+  function clearFilter() {
+    setAfter("");
+    setBefore("");
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -87,13 +118,63 @@ export default function HomePage() {
       </form>
 
       <div className="card">
-        <h2>History</h2>
+        <div className="history-head">
+          <h2>History</h2>
+          {Array.isArray(runs) && (
+            <span className="subtle history-count">
+              {runs.length} {runs.length === 1 ? "run" : "runs"}
+              {filtered ? " in range" : ""}
+            </span>
+          )}
+        </div>
+
+        <div className="filter-bar">
+          <div className="field">
+            <label htmlFor="after">From</label>
+            <input
+              id="after"
+              type="date"
+              value={after}
+              max={before || undefined}
+              onChange={(e) => setAfter(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="before">To</label>
+            <input
+              id="before"
+              type="date"
+              value={before}
+              min={after || undefined}
+              onChange={(e) => setBefore(e.target.value)}
+            />
+          </div>
+          <div className="filter-presets">
+            <button type="button" className="chip" onClick={() => { const r = lastDays(1); setAfter(r.after); setBefore(r.before); }}>
+              Today
+            </button>
+            <button type="button" className="chip" onClick={() => { const r = lastDays(7); setAfter(r.after); setBefore(r.before); }}>
+              7 days
+            </button>
+            <button type="button" className="chip" onClick={() => { const r = lastDays(30); setAfter(r.after); setBefore(r.before); }}>
+              30 days
+            </button>
+            <button type="button" className="chip" onClick={clearFilter} disabled={!filtered}>
+              Clear
+            </button>
+          </div>
+        </div>
+
         {runs === null ? (
           <p className="subtle">Loading…</p>
         ) : runs.length === 0 ? (
-          <p className="subtle">No runs yet — start one above.</p>
+          <p className="subtle">
+            {filtered
+              ? "No runs in this date range."
+              : "No runs yet — start one above."}
+          </p>
         ) : (
-          <ul className="run-list">
+          <ul className="run-list" style={{ opacity: loading ? 0.5 : 1 }}>
             {runs.map((r) => (
               <li key={r.id}>
                 <Link to={`/runs/${r.id}`}>

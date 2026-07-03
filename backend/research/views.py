@@ -9,6 +9,7 @@ from django.db.models import (
 )
 from django.http import StreamingHttpResponse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
@@ -59,7 +60,18 @@ class RunListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         # Scoped to the caller — a user never sees another user's runs (FR-AUTH-5).
-        return ResearchRun.objects.filter(user=self.request.user)
+        qs = ResearchRun.objects.filter(user=self.request.user)
+        # Optional date-range filter for the history view (?created_after= /
+        # ?created_before=, each an inclusive YYYY-MM-DD day). The __date lookup
+        # compares in the active timezone, so both bounds are whole-day inclusive.
+        params = self.request.query_params
+        after = parse_date(params.get("created_after", "") or "")
+        before = parse_date(params.get("created_before", "") or "")
+        if after:
+            qs = qs.filter(created_at__date__gte=after)
+        if before:
+            qs = qs.filter(created_at__date__lte=before)
+        return qs
 
     def get_serializer_class(self):
         return RunCreateSerializer if self.request.method == "POST" else RunListSerializer
