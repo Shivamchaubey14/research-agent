@@ -12,9 +12,22 @@ from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
+from rest_framework.renderers import BaseRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
+
+
+class EventStreamRenderer(BaseRenderer):
+    """Lets DRF content negotiation accept an ``Accept: text/event-stream``
+    request (EventSource) instead of rejecting it with 406. The SSE view builds
+    its own StreamingHttpResponse, so this renderer is never actually called."""
+
+    media_type = "text/event-stream"
+    format = "event-stream"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
 
 from . import streaming
 from .models import Document, ResearchRun
@@ -120,6 +133,7 @@ class RunEventsView(APIView):
     authentication_classes = [QueryParamJWTAuthentication]
     permission_classes = [*APIView.permission_classes, IsOwner]
     throttle_classes = []  # a long-lived stream must not be rate-limited
+    renderer_classes = [EventStreamRenderer]  # accept EventSource's Accept header
 
     def get(self, request, pk):
         run = generics.get_object_or_404(
