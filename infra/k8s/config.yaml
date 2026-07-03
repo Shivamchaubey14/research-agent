@@ -21,6 +21,8 @@ metadata:
 type: Opaque
 stringData:
   DJANGO_SECRET_KEY: "CHANGEME-long-random-string"
-  ANTHROPIC_API_KEY: "CHANGEME"
+  GROQ_API_KEY: "CHANGEME"
+  # Optional: enables the agent's web_search tool. Leave blank to run without it.
+  TAVILY_API_KEY: ""
   MYSQL_ROOT_PASSWORD: "root@123"
   DATABASE_URL: "mysql://root:root%40123@mysql:3306/research"
