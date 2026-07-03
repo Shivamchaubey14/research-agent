@@ -39,7 +39,7 @@ def run_case(settings: Settings, item: dict) -> CaseResult:
     try:
         result = ResearchAgent(settings).run(item["question"], depth=depth)
         # A fresh judge client gives clean per-case judge token/cost accounting.
-        judge_llm = LLM(settings.anthropic_api_key, settings.model)
+        judge_llm = LLM(settings.groq_api_key, settings.model)
         scores = judge.judge_report(judge_llm, item["question"], result.report)
         return CaseResult(
             id=item["id"],

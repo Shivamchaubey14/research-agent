@@ -1,26 +1,35 @@
 """The research agent loop: plan -> search -> verify -> cite (SRS §5.3).
 
-The loop autonomously decomposes the question (FR-AGT-1), drives the Claude
+The loop autonomously decomposes the question (FR-AGT-1), drives the Groq
 tool-use interface to search the web (FR-AGT-2), iterates until the evidence is
 sufficient or a hard ceiling is reached (FR-AGT-3), enforces token and
 wall-clock budgets (FR-AGT-4), and synthesises a cited report whose claims are
 grounded in retrieved sources (FR-AGT-5, FR-AGT-6). Every step emits a progress
 event (FR-AGT-7).
+
+Groq's chat models have no server-side search, so both web search and document
+search are client-side tools: the model emits a tool call, the loop executes it
+and feeds the results back as a ``tool`` message, and the model continues.
 """
+import json
 import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
+
+from groq import APIStatusError
 
 from worker.agent import events, prompts
 from worker.agent.events import ProgressEmitter, ProgressEvent
 from worker.agent.llm import LLM, Usage
 from worker.agent.schema import Plan, ReportDraft
+from worker.agent.websearch import make_web_search
 from worker.config import (
     AGENT_POLICY_VERSION,
     DOCUMENT_SEARCH_TOOL_NAME,
     RAG_TOP_K,
+    WEB_RESULT_CHAR_LIMIT,
+    WEB_SEARCH_MAX_RESULTS,
     WEB_SEARCH_TOOL_NAME,
-    WEB_SEARCH_TOOL_TYPE,
     DepthProfile,
     Settings,
     profile_for,
@@ -50,20 +59,43 @@ CancelCheck = Callable[[], bool]
 # document search (web-only run).
 Retriever = Callable[[str, int], list]
 
-# Client-side tool exposed to the model when a retriever is available.
-_DOCUMENT_SEARCH_TOOL = {
-    "name": DOCUMENT_SEARCH_TOOL_NAME,
-    "description": (
-        "Search the user's uploaded documents for passages relevant to a query. "
-        "Returns excerpts, each with a source reference (doc_ref). Use this to "
-        "ground answers in the user's own files, alongside web search."
-    ),
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "query": {"type": "string", "description": "What to look for."}
+# Client-side tools, in Groq/OpenAI function-calling format.
+_WEB_SEARCH_TOOL = {
+    "type": "function",
+    "function": {
+        "name": WEB_SEARCH_TOOL_NAME,
+        "description": (
+            "Search the public web for up-to-date information. Returns a list "
+            "of results, each with a title, URL and a text snippet. Use this to "
+            "gather and corroborate evidence for the research question."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "The search query."}
+            },
+            "required": ["query"],
         },
-        "required": ["query"],
+    },
+}
+
+_DOCUMENT_SEARCH_TOOL = {
+    "type": "function",
+    "function": {
+        "name": DOCUMENT_SEARCH_TOOL_NAME,
+        "description": (
+            "Search the user's uploaded documents for passages relevant to a "
+            "query. Returns excerpts, each with a source reference (doc_ref). "
+            "Use this to ground answers in the user's own files, alongside web "
+            "search."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "What to look for."}
+            },
+            "required": ["query"],
+        },
     },
 }
 
@@ -77,10 +109,12 @@ class ResearchAgent:
         retriever: Optional[Retriever] = None,
     ):
         self._settings = settings
-        self._llm = LLM(settings.anthropic_api_key, settings.model)
+        self._llm = LLM(settings.groq_api_key, settings.model)
         self._emitter = emitter or events.LoggingEmitter()
         self._should_cancel = should_cancel or (lambda: False)
         self._retriever = retriever
+        # Web search is optional: only wired up when a Tavily key is configured.
+        self._web_search = make_web_search(settings.tavily_api_key)
 
     # -- public API ---------------------------------------------------------
 
@@ -132,19 +166,16 @@ class ResearchAgent:
         return plan
 
     def _research(self, question, plan, profile, started):
-        """Drive the search tool loop; return (evidence digest, sources).
+        """Drive the tool loop; return (evidence digest, sources).
 
-        Always has web search (a server tool); when a retriever is injected it
-        also offers a client-side ``document_search`` tool over the user's
-        uploaded documents, executing those calls and feeding results back.
+        Offers a ``web_search`` tool when a Tavily key is configured, and a
+        ``document_search`` tool when a retriever is injected. The model decides
+        which to call; the loop executes each call and feeds results back until
+        the model stops calling tools or a budget/turn ceiling is hit.
         """
-        tools = [
-            {
-                "type": WEB_SEARCH_TOOL_TYPE,
-                "name": WEB_SEARCH_TOOL_NAME,
-                "max_uses": profile.max_search_uses,
-            }
-        ]
+        tools = []
+        if self._web_search is not None:
+            tools.append(_WEB_SEARCH_TOOL)
         if self._retriever is not None:
             tools.append(_DOCUMENT_SEARCH_TOOL)
 
@@ -158,6 +189,7 @@ class ResearchAgent:
         sources: list[dict] = []
         seen_urls: set[str] = set()
         seen_refs: set[str] = set()
+        web_searches = 0  # enforce the per-run web-search cap (FR-AGT-3)
 
         for turn in range(profile.max_research_turns):
             if self._budget_exhausted(profile, started):
@@ -165,31 +197,47 @@ class ResearchAgent:
                 break
             self._checkpoint()
 
-            message = self._llm.research_turn(
-                system=prompts.RESEARCHER_SYSTEM,
-                messages=messages,
-                tools=tools,
-                effort=profile.effort,
-                max_tokens=profile.max_research_tokens,
-            )
-            self._consume_blocks(message.content, digest_parts, sources, seen_urls)
-            messages.append({"role": "assistant", "content": message.content})
-
-            if message.stop_reason == "pause_turn":
-                # Server-side tool loop hit its limit; re-send to resume.
-                continue
-            if message.stop_reason == "tool_use":
-                # The model called the client-side document_search tool; run it,
-                # return the results, and let it continue.
-                tool_results = self._run_document_search(
-                    message.content, digest_parts, sources, seen_refs
+            try:
+                message = self._llm.chat(
+                    system=prompts.RESEARCHER_SYSTEM,
+                    messages=messages,
+                    tools=tools,
+                    effort=profile.effort,
+                    max_tokens=profile.max_research_tokens,
                 )
-                if tool_results:
-                    messages.append({"role": "user", "content": tool_results})
-                    continue
-                break  # nothing we can answer — avoid looping forever
-            # end_turn / max_tokens / refusal: the research stage is done.
-            break
+            except APIStatusError as exc:
+                # A single bad turn (e.g. free-tier token limit, or the model
+                # emitting a malformed tool call) shouldn't sink the whole run:
+                # stop researching and synthesise from the evidence gathered so
+                # far (FR-AGT-8).
+                self._emit(
+                    events.ERROR,
+                    f"Research turn failed ({exc.status_code}); "
+                    "synthesising with the evidence gathered so far",
+                    error=str(exc),
+                )
+                break
+
+            text = (message.content or "").strip()
+            if text:
+                digest_parts.append(text)
+                self._emit(events.REASONING, _preview(text))
+
+            messages.append(_assistant_message(message))
+
+            tool_calls = message.tool_calls or []
+            if not tool_calls:
+                # No tool calls: the model has finished gathering evidence.
+                break
+
+            for call in tool_calls:
+                result, web_searches = self._run_tool_call(
+                    call, digest_parts, sources, seen_urls, seen_refs,
+                    profile, web_searches,
+                )
+                messages.append(
+                    {"role": "tool", "tool_call_id": call.id, "content": result}
+                )
 
         return "\n\n".join(p for p in digest_parts if p.strip()), sources
 
@@ -217,79 +265,90 @@ class ResearchAgent:
         )
         return report
 
-    # -- helpers ------------------------------------------------------------
+    # -- tool execution -----------------------------------------------------
 
-    def _consume_blocks(self, content, digest_parts, sources, seen_urls):
-        """Emit events for each content block and harvest evidence + sources."""
-        for block in content:
-            btype = getattr(block, "type", None)
-            if btype == "text":
-                text = block.text.strip()
-                if text:
-                    digest_parts.append(text)
-                    self._emit(events.REASONING, _preview(text))
-            elif btype == "server_tool_use":
-                query = (block.input or {}).get("query", "")
-                self._emit(events.SEARCH, f"Searching: {query}", query=query)
-            elif btype == "web_search_tool_result":
-                self._harvest_results(block, sources, seen_urls)
+    def _run_tool_call(
+        self, call, digest_parts, sources, seen_urls, seen_refs, profile, web_searches
+    ):
+        """Execute one tool call; return ``(result_text, web_searches)``."""
+        name = call.function.name
+        try:
+            args = json.loads(call.function.arguments or "{}")
+        except json.JSONDecodeError:
+            args = {}
+        query = args.get("query", "")
 
-    def _run_document_search(self, content, digest_parts, sources, seen_refs):
-        """Execute document_search tool calls; return tool_result blocks.
-
-        Harvests retrieved passages into the evidence digest and the source list
-        (kind="document"), and returns one tool_result per tool_use block."""
-        tool_results = []
-        for block in content:
-            if getattr(block, "type", None) != "tool_use":
-                continue
-            if block.name != DOCUMENT_SEARCH_TOOL_NAME:
-                continue
-            query = (block.input or {}).get("query", "")
-            self._emit(events.SEARCH, f"Searching documents: {query}", query=query)
-            hits = self._retriever(query, RAG_TOP_K) or []
-
-            lines = []
-            for hit in hits:
-                ref = hit.get("doc_ref", "")
-                lines.append(f"[{ref}] ({hit.get('filename', '')}) {hit.get('text', '')}")
-                if ref and ref not in seen_refs:
-                    seen_refs.add(ref)
-                    sources.append(
-                        {"kind": "document", "doc_ref": ref, "filename": hit.get("filename", "")}
-                    )
-                    digest_parts.append(f"[doc {ref}] {hit.get('text', '')}")
-            self._emit(
-                events.OBSERVATION, f"Found {len(hits)} document passage(s)", new_sources=len(hits)
+        if name == WEB_SEARCH_TOOL_NAME and self._web_search is not None:
+            if web_searches >= profile.max_search_uses:
+                return (
+                    "Web search budget exhausted for this run; answer from the "
+                    "evidence already gathered.",
+                    web_searches,
+                )
+            web_searches += 1
+            self._emit(events.SEARCH, f"Searching: {query}", query=query)
+            return (
+                self._run_web_search(query, digest_parts, sources, seen_urls),
+                web_searches,
             )
-            tool_results.append(
-                {
-                    "type": "tool_result",
-                    "tool_use_id": block.id,
-                    "content": "\n\n".join(lines)
-                    or "No matching passages found in the user's documents.",
-                }
-            )
-        return tool_results
 
-    def _harvest_results(self, block, sources, seen_urls):
-        results = getattr(block, "content", None)
-        # An error surfaces as a single object, not a list (FR-AGT-8).
-        if isinstance(results, list):
-            new = 0
-            for item in results:
-                url = getattr(item, "url", None)
-                if not url or url in seen_urls:
-                    continue
-                seen_urls.add(url)
-                sources.append({"url": url, "title": getattr(item, "title", "") or ""})
-                new += 1
-            self._emit(events.OBSERVATION, f"Found {new} new source(s)", new_sources=new)
-        else:
-            code = getattr(results, "error_code", "unknown")
+        if name == DOCUMENT_SEARCH_TOOL_NAME and self._retriever is not None:
+            return (
+                self._run_document_search(query, digest_parts, sources, seen_refs),
+                web_searches,
+            )
+
+        return f"Unknown or unavailable tool: {name}", web_searches
+
+    def _run_web_search(self, query, digest_parts, sources, seen_urls) -> str:
+        """Run one web search; harvest results into evidence + sources.
+
+        Result snippets are truncated so the running conversation stays under
+        the free-tier per-minute token limit (see config).
+        """
+        try:
+            hits = self._web_search(query, WEB_SEARCH_MAX_RESULTS) or []
+        except Exception as exc:  # noqa: BLE001 - one failure shouldn't kill the run
             # Resilient to a single tool failure: log and keep going (FR-AGT-8).
-            self._emit(events.ERROR, f"Web search returned an error: {code}",
-                       error_code=code)
+            self._emit(events.ERROR, f"Web search failed: {exc}", error=str(exc))
+            return "The web search tool returned an error; try a different query."
+
+        lines = []
+        new = 0
+        for hit in hits:
+            url = hit.get("url", "")
+            content = (hit.get("content", "") or "")[:WEB_RESULT_CHAR_LIMIT]
+            title = hit.get("title", "")
+            lines.append(f"[{title}] ({url}) {content}")
+            if url and url not in seen_urls:
+                seen_urls.add(url)
+                sources.append({"url": url, "title": title})
+                digest_parts.append(f"[web] {title}: {content}")
+                new += 1
+        self._emit(events.OBSERVATION, f"Found {new} new source(s)", new_sources=new)
+        return "\n\n".join(lines) or "No results found for that query."
+
+    def _run_document_search(self, query, digest_parts, sources, seen_refs) -> str:
+        """Run one document search; harvest passages into evidence + sources."""
+        self._emit(events.SEARCH, f"Searching documents: {query}", query=query)
+        hits = self._retriever(query, RAG_TOP_K) or []
+
+        lines = []
+        for hit in hits:
+            ref = hit.get("doc_ref", "")
+            lines.append(f"[{ref}] ({hit.get('filename', '')}) {hit.get('text', '')}")
+            if ref and ref not in seen_refs:
+                seen_refs.add(ref)
+                sources.append(
+                    {"kind": "document", "doc_ref": ref, "filename": hit.get("filename", "")}
+                )
+                digest_parts.append(f"[doc {ref}] {hit.get('text', '')}")
+        self._emit(
+            events.OBSERVATION, f"Found {len(hits)} document passage(s)", new_sources=len(hits)
+        )
+        return "\n\n".join(lines) or "No matching passages found in the user's documents."
+
+    # -- helpers ------------------------------------------------------------
 
     def _budget_exhausted(self, profile: DepthProfile, started: float) -> bool:
         if self._llm.usage.total_tokens >= profile.token_budget:
@@ -305,6 +364,24 @@ class ResearchAgent:
 
     def _emit(self, kind, message, **data):
         self._emitter.emit(ProgressEvent(kind=kind, message=message, data=data))
+
+
+def _assistant_message(message) -> dict:
+    """Convert a Groq assistant message back into a re-sendable dict."""
+    out = {"role": "assistant", "content": message.content or ""}
+    if message.tool_calls:
+        out["tool_calls"] = [
+            {
+                "id": call.id,
+                "type": "function",
+                "function": {
+                    "name": call.function.name,
+                    "arguments": call.function.arguments,
+                },
+            }
+            for call in message.tool_calls
+        ]
+    return out
 
 
 def _preview(text: str, limit: int = 200) -> str:

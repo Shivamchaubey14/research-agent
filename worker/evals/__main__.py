@@ -5,7 +5,8 @@
 Runs the agent over the curated question set, scores each report with the LLM
 judge, prints a scorecard, optionally writes the full results as JSON, and exits
 non-zero if the suite is below the promotion thresholds (so CI can gate on it).
-Needs ANTHROPIC_API_KEY (read from the environment or .env).
+Needs GROQ_API_KEY (read from the environment or .env); TAVILY_API_KEY is
+optional and enables web search.
 """
 import json
 import sys

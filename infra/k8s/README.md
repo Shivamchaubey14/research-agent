@@ -31,7 +31,8 @@ worker scales independently of the API.
 # 1. Set real secrets first (do NOT commit them):
 kubectl -n deepresearch create secret generic dr-secrets \
   --from-literal=DJANGO_SECRET_KEY="$(openssl rand -hex 32)" \
-  --from-literal=ANTHROPIC_API_KEY="sk-ant-..." \
+  --from-literal=GROQ_API_KEY="gsk_..." \
+  --from-literal=TAVILY_API_KEY="" \
   --from-literal=MYSQL_ROOT_PASSWORD='root@123' \
   --from-literal=DATABASE_URL='mysql://root:root%40123@mysql:3306/research' \
   --dry-run=client -o yaml | kubectl apply -f -

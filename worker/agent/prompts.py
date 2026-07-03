@@ -1,8 +1,8 @@
 """Versioned system prompts for each phase of the agent (FR-AGT-9).
 
-Kept terse and declarative: Opus 4.8 follows instructions closely, so the
-policy states the contract (ground every claim, drop what you cannot support)
-rather than over-prescribing steps.
+Kept terse and declarative: the models we use follow instructions closely, so
+the policy states the contract (ground every claim, drop what you cannot
+support) rather than over-prescribing steps.
 """
 
 PLANNER_SYSTEM = """\

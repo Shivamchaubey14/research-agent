@@ -18,7 +18,7 @@ microservices, async messaging, containerization, orchestration, CI/CD, and eval
 ```
 React (Vite)  ──HTTP / SSE──►  Django + DRF ──produce──►  Kafka  ──consume──►  Agent Worker(s)
      ▲                              │   ▲                   topics                   │
-     │                           MySQL    │             (jobs, events)      Claude API + Web Search
+     │                           MySQL    │             (jobs, events)      Groq API + Web Search
      └──── live progress ◄── Redis ◄──────┴───────── progress events ◄───────────────┘
                                                                        Qdrant (RAG vector store)
 ```
@@ -29,7 +29,7 @@ React (Vite)  ──HTTP / SSE──►  Django + DRF ──produce──►  Ka
 | API              | Django + Django REST Framework, JWT   | Auth, users, reports, run history, job dispatch        |
 | Messaging        | Apache Kafka                          | Async job queue + progress event stream                |
 | Worker           | Python (Kafka consumer)               | The agent loop: plan → search → verify → cite          |
-| LLM              | Claude (Anthropic API)                | Reasoning, tool use, synthesis                          |
+| LLM              | Groq (OpenAI-compatible API)          | Reasoning, tool use, synthesis                          |
 | RAG store        | Qdrant                                | Vector search over uploaded documents                  |
 | Cache / fan-out  | Redis                                 | Caching + SSE/WebSocket progress fan-out               |
 | Database         | MySQL 8                               | Source of truth                                        |
@@ -61,7 +61,7 @@ research-agent/
 ## Quick start (local)
 
 ```bash
-cp .env.example .env          # then add your ANTHROPIC_API_KEY
+cp .env.example .env          # then add your GROQ_API_KEY (Tavily key optional)
 docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, worker, frontend
 ```
 
@@ -77,7 +77,7 @@ docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, work
 
 - [x] **Phase 0** — Monorepo skeleton + docker-compose
 - [x] **Phase 1** — Django API + JWT auth + MySQL models
-- [x] **Phase 2** — Agent worker (Claude tool-use loop)
+- [x] **Phase 2** — Agent worker (Groq tool-use loop)
 - [x] **Phase 3** — Kafka wiring + Redis SSE streaming
 - [x] **Phase 4** — React UI
 - [x] **Phase 5** — RAG with Qdrant
@@ -123,15 +123,19 @@ Run the test suite with `python manage.py test`.
 
 ## Agent worker (Phase 2)
 
-The autonomous research agent lives in `worker/`. It runs a Claude tool-use loop
+The autonomous research agent lives in `worker/`. It runs a Groq tool-use loop
 — **plan** the sub-questions, **search** the web, **verify** claims against
 sources, **cite** them — and emits a structured progress event for every step.
 Output is a structured report (summary + sections + citations) that maps onto
 the `Report`/`Citation` models.
 
-It uses Claude (Opus 4.8) with adaptive thinking and the Anthropic web-search
-server tool; research depth (`quick`/`standard`/`deep`) controls the iteration,
-search and token/wall-clock budgets.
+It uses Groq (`openai/gpt-oss-120b` by default, overridable via `AGENT_MODEL`)
+with `reasoning_effort` scaled by depth. Groq's chat models don't search the
+web themselves, so the agent calls a client-side `web_search` tool backed by
+[Tavily](https://tavily.com) — set `TAVILY_API_KEY` to enable it (the agent
+runs without web search if it's unset). Research depth
+(`quick`/`standard`/`deep`) controls the iteration, search and
+token/wall-clock budgets.
 
 To develop the agent in isolation (no Kafka/Redis), run one job from the CLI —
 progress prints to stderr, the final cited report to stdout:
@@ -140,7 +144,8 @@ progress prints to stderr, the final cited report to stdout:
 cd worker
 python -m venv .venv && source .venv/Scripts/activate   # Windows
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...                      # or put it in .env
+export GROQ_API_KEY=gsk_...                              # or put it in .env
+export TAVILY_API_KEY=tvly-...                           # optional: web search
 python -m worker.cli "Compare Kafka and RabbitMQ for an event queue" --depth deep
 ```
 
@@ -240,7 +245,8 @@ python -m worker.evals out.json   # also writes full results
 ```
 
 The harness reuses the same `ResearchAgent` the worker runs, so it measures the
-real pipeline; it needs `ANTHROPIC_API_KEY` (agent + judge both call Claude).
+real pipeline; it needs `GROQ_API_KEY` (agent + judge both call Groq), and
+`TAVILY_API_KEY` if you want web search during the eval.
 
 ---
 
@@ -270,9 +276,10 @@ GitHub Actions in `.github/workflows/`:
   the **frontend**, and builds all three **Docker images** — so a broken
   Dockerfile or failing test blocks the merge (NFR-MNT-1/2).
 - **`evals.yml`** (manual + weekly): runs the agent **eval gate**
-  (`python -m worker.evals`) using the `ANTHROPIC_API_KEY` repo secret and
-  uploads the scorecard. It's separate from `ci.yml` because it calls the Claude
-  API (cost + secret); the CLI's exit code gates promotion (§11.2).
+  (`python -m worker.evals`) using the `GROQ_API_KEY` (and optional
+  `TAVILY_API_KEY`) repo secrets and uploads the scorecard. It's separate from
+  `ci.yml` because it calls the Groq API (secret + rate limits); the CLI's exit
+  code gates promotion (§11.2).
 
 ## Kubernetes (Phase 7)
 
