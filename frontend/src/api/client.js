@@ -111,8 +111,13 @@ export const api = {
   createRun(question, depth) {
     return apiFetch("/runs", { method: "POST", body: { question, depth } });
   },
-  listRuns() {
-    return apiFetch("/runs");
+  // Optional date range: { after, before } as YYYY-MM-DD (inclusive days).
+  listRuns({ after, before } = {}) {
+    const params = new URLSearchParams();
+    if (after) params.set("created_after", after);
+    if (before) params.set("created_before", before);
+    const qs = params.toString();
+    return apiFetch(`/runs${qs ? `?${qs}` : ""}`);
   },
   getRun(id) {
     return apiFetch(`/runs/${id}`);

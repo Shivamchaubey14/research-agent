@@ -355,6 +355,54 @@ button.signout:hover:not(:disabled) {
   white-space: nowrap;
 }
 
+/* ---- History filter bar ---- */
+.history-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.history-count {
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  margin: 14px 0 6px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.filter-bar .field {
+  flex: 0 0 auto;
+}
+.filter-bar input[type="date"] {
+  padding: 9px 12px;
+  width: auto;
+}
+.filter-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+button.chip {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  background: rgba(165, 175, 121, 0.16);
+  color: var(--teal);
+  border: 1.5px solid rgba(165, 175, 121, 0.45);
+  box-shadow: none;
+}
+button.chip:hover:not(:disabled) {
+  background: rgba(165, 175, 121, 0.28);
+  transform: none;
+}
+
 /* ---- Progress feed ---- */
 .feed {
   list-style: none;
