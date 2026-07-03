@@ -403,49 +403,189 @@ button.chip:hover:not(:disabled) {
   transform: none;
 }
 
-/* ---- Progress feed ---- */
-.feed {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 0.94rem;
+/* ---- Progress roadmap ---- */
+.roadmap-wrap {
+  width: 100%;
 }
-.feed li {
+.roadmap {
+  position: relative;
+  width: 100%;
+}
+.roadmap-svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.rm-track {
+  fill: none;
+  stroke: rgba(129, 113, 72, 0.16);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.rm-line {
+  fill: none;
+  stroke: url(#rm-grad);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgba(232, 160, 124, 0.55));
+}
+.rm-comet {
+  fill: #fff6ec;
+  filter: drop-shadow(0 0 7px rgba(232, 160, 124, 0.95))
+    drop-shadow(0 0 14px rgba(157, 176, 128, 0.7));
+}
+
+/* Nodes — numbered stops on the road */
+.rm-dot {
+  position: absolute;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--green-light);
+  border: 3px solid var(--surface-solid);
+  box-shadow: 0 2px 8px rgba(43, 87, 72, 0.28);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+  z-index: 2;
+}
+.rm-dot:hover,
+.rm-dot:focus-visible {
+  transform: translate(-50%, -50%) scale(1.16);
+  outline: none;
+}
+.rm-dot.is-shown {
+  box-shadow: 0 0 0 4px rgba(232, 160, 124, 0.35), 0 2px 8px rgba(43, 87, 72, 0.28);
+}
+.rm-dot.is-selected {
+  box-shadow: 0 0 0 4px rgba(43, 87, 72, 0.55), 0 2px 8px rgba(43, 87, 72, 0.3);
+  transform: translate(-50%, -50%) scale(1.12);
+}
+.rm-dot.search,
+.rm-dot.observation { background: var(--sage); }
+.rm-dot.plan,
+.rm-dot.verification,
+.rm-dot.reasoning { background: var(--olive); }
+.rm-dot.report { background: var(--teal); }
+.rm-dot.complete { background: var(--green); }
+.rm-dot.error,
+.rm-dot.failed { background: var(--err); }
+.rm-dot.cancelled { background: var(--peach); }
+.rm-dot.is-active {
+  animation: rm-pulse 1.5s ease-out infinite;
+}
+@keyframes rm-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(232, 160, 124, 0.55), 0 2px 8px rgba(43, 87, 72, 0.28); }
+  70% { box-shadow: 0 0 0 13px rgba(232, 160, 124, 0), 0 2px 8px rgba(43, 87, 72, 0.28); }
+  100% { box-shadow: 0 0 0 0 rgba(232, 160, 124, 0), 0 2px 8px rgba(43, 87, 72, 0.28); }
+}
+
+/* Caption — the clean area below the road where step text lives */
+.rm-caption {
   display: flex;
   gap: 12px;
-  padding: 9px 0;
-  border-top: 1px dashed var(--border);
+  align-items: flex-start;
+  margin-top: 6px;
+  padding: 14px 16px;
+  background: rgba(165, 175, 121, 0.12);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  min-height: 64px;
+  transition: border-color 0.15s, background 0.15s;
 }
-.feed li:first-child {
-  border-top: none;
+.rm-caption.is-pinned {
+  border-color: rgba(43, 87, 72, 0.4);
+  background: rgba(97, 135, 100, 0.14);
 }
-.feed .kind {
+.rm-cap-step {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-solid);
+  border: 1.5px solid var(--border);
   font-family: var(--font-head);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--teal);
+}
+.rm-hint {
+  margin: 8px 2px 0;
+  font-size: 0.78rem;
+}
+.rm-cap-kind {
+  flex: 0 0 auto;
+  font-family: var(--font-head);
+  font-size: 0.66rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #fff;
   background: var(--green-light);
   border-radius: var(--pill);
-  padding: 2px 10px;
-  height: fit-content;
-  margin-top: 2px;
-  min-width: 86px;
-  text-align: center;
+  padding: 4px 12px;
+  margin-top: 1px;
 }
-.feed .kind.search,
-.feed .kind.observation { background: var(--sage); }
-.feed .kind.plan,
-.feed .kind.verification { background: var(--olive); }
-.feed .kind.complete { background: var(--green); }
-.feed .kind.error,
-.feed .kind.failed { background: var(--err); }
-.feed .kind.cancelled { background: var(--peach); }
-.feed .msg .meta {
+.rm-cap-kind.search,
+.rm-cap-kind.observation { background: var(--sage); }
+.rm-cap-kind.plan,
+.rm-cap-kind.verification,
+.rm-cap-kind.reasoning { background: var(--olive); }
+.rm-cap-kind.report { background: var(--teal); }
+.rm-cap-kind.complete { background: var(--green); }
+.rm-cap-kind.error,
+.rm-cap-kind.failed { background: var(--err); }
+.rm-cap-kind.cancelled { background: var(--peach); }
+.rm-cap-body {
+  flex: 1;
+  min-width: 0;
+}
+.rm-cap-msg {
+  font-size: 0.96rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.rm-cap-meta {
+  margin-top: 4px;
+  font-size: 0.85rem;
   color: var(--muted);
-  font-size: 0.84rem;
-  margin-top: 2px;
+}
+
+/* ---- Typewriter ---- */
+.tw[role="button"] {
+  cursor: pointer;
+}
+.tw-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 1px;
+  background: var(--peach);
+  vertical-align: text-bottom;
+  animation: tw-blink 0.9s steps(1, end) infinite;
+}
+@keyframes tw-blink {
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rm-line,
+  .rm-comet,
+  .rm-dot.is-active,
+  .tw-cursor {
+    animation: none;
+  }
 }
 
 /* ---- Report ---- */
