@@ -40,6 +40,25 @@ jobs:
         working-directory: backend
         run: python manage.py test
 
+  worker:
+    name: Worker — lint, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      # The unit tests only exercise the worker's pure-logic modules (chunking,
+      # depth profiles, agent schema), so they need pydantic + the LLM SDKs the
+      # agent package imports — not the full Kafka/Redis/Qdrant stack.
+      - name: Install dependencies
+        run: pip install pydantic groq tavily-python ruff
+      - name: Lint (ruff)
+        run: ruff check worker
+      - name: Tests
+        run: python -m unittest discover -s worker/tests -t . -p "test_*.py"
+
   frontend:
     name: Frontend — build
     runs-on: ubuntu-latest
