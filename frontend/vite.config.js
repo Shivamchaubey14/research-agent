@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -6,4 +7,13 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: { host: true, port: 5173 },
+  test: {
+    // Component/hook tests need a DOM; jsdom is the lightweight option.
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/test/setup.js",
+    css: false,
+    // Only pick up co-located *.test.* files, never anything in dist/.
+    include: ["src/**/*.{test,spec}.{js,jsx}"],
+  },
 });
