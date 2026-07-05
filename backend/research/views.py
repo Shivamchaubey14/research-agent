@@ -18,6 +18,18 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from . import streaming
+from .models import Document, ResearchRun
+from .permissions import IsOwner
+from .serializers import (
+    AdminRunSerializer,
+    DocumentSerializer,
+    RunCreateSerializer,
+    RunDetailSerializer,
+    RunListSerializer,
+)
+from .services import enqueue_document, enqueue_run
+
 
 class EventStreamRenderer(BaseRenderer):
     """Lets DRF content negotiation accept an ``Accept: text/event-stream``
@@ -30,17 +42,6 @@ class EventStreamRenderer(BaseRenderer):
     def render(self, data, accepted_media_type=None, renderer_context=None):
         return data
 
-from . import streaming
-from .models import Document, ResearchRun
-from .permissions import IsOwner
-from .serializers import (
-    AdminRunSerializer,
-    DocumentSerializer,
-    RunCreateSerializer,
-    RunDetailSerializer,
-    RunListSerializer,
-)
-from .services import enqueue_document, enqueue_run
 
 # Maps a terminal run status to the terminal SSE event kind, so a client that
 # subscribes after the run finished (or after the event stream expired) still
