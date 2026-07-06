@@ -42,7 +42,7 @@ export default function RunPage() {
   }
 
   return (
-    <div className="container stack">
+    <div className="container stack run-layout">
       <div className="card">
         <p className="subtle">
           <Link to="/">← All runs</Link>
@@ -64,17 +64,19 @@ export default function RunPage() {
         )}
       </div>
 
-      <div className="card">
-        <h2>Progress</h2>
-        <ProgressFeed events={events} />
-        {reconnecting && <p className="subtle">Reconnecting…</p>}
-      </div>
-
-      {run?.report && (
-        <div className="card">
-          <ReportView run={run} />
+      <div className="run-panes">
+        <div className="card progress-pane">
+          <h2>Progress</h2>
+          <ProgressFeed events={events} />
+          {reconnecting && <p className="subtle">Reconnecting…</p>}
         </div>
-      )}
+
+        {run?.report && (
+          <div className="card report-pane">
+            <ReportView run={run} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

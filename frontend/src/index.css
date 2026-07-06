@@ -166,6 +166,37 @@ a:hover {
   margin-top: 18px;
 }
 
+/* ---- Run page: Progress + Report side by side ---- */
+/* Wider canvas so two columns have room on tablet/desktop. */
+.run-layout {
+  max-width: 1240px;
+}
+.run-panes {
+  display: flex;
+  flex-direction: column; /* phones: vertical stack */
+  gap: 18px;
+}
+/* gap owns the spacing between the two cards — don't double it. */
+.run-panes > .card + .card {
+  margin-top: 0;
+}
+@media (min-width: 768px) {
+  .run-panes {
+    flex-direction: row; /* tablet + desktop: side by side */
+    align-items: flex-start;
+  }
+  .run-panes > .card {
+    flex: 1 1 0;
+    min-width: 0; /* let the roadmap/report shrink rather than overflow */
+    /* keep both columns on one screen; each scrolls its own overflow */
+    max-height: calc(100vh - 190px);
+    overflow: auto;
+  }
+  .run-panes > .report-pane {
+    flex: 1.3 1 0; /* give the report a little more width */
+  }
+}
+
 h1 {
   font-size: 1.7rem;
   margin: 0 0 4px;
