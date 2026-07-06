@@ -575,6 +575,49 @@ button.chip.is-active:hover:not(:disabled) {
   color: var(--muted);
 }
 
+/* Planned sub-questions: one point per line, spaced, with a coloured badge. */
+.rm-cap-plan {
+  list-style: none;
+  counter-reset: plan;
+  margin: 10px 0 2px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rm-cap-plan li {
+  counter-increment: plan;
+  position: relative;
+  padding: 6px 12px 6px 38px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink);
+  background: rgba(97, 135, 100, 0.08);
+  border-left: 3px solid var(--olive);
+  border-radius: 6px;
+}
+.rm-cap-plan li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 9px;
+  top: 6px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--olive);
+  border-radius: 50%;
+}
+.rm-kw {
+  color: var(--teal);
+  font-weight: 600;
+}
+
 /* ---- Typewriter ---- */
 .tw[role="button"] {
   cursor: pointer;
