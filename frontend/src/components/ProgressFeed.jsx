@@ -26,10 +26,7 @@ function meta(ev) {
       return ev.query ? `“${ev.query}”` : null;
     case "observation":
       return ev.new_sources != null ? `${ev.new_sources} new source(s)` : null;
-    case "plan":
-      return Array.isArray(ev.sub_questions)
-        ? ev.sub_questions.map((q, i) => `${i + 1}. ${q}`).join("  ·  ")
-        : null;
+    // "plan" is rendered as a numbered list in the caption body, not here.
     case "report":
       return ev.sections != null ? `${ev.sections} sections, ${ev.citations} citations` : null;
     case "complete":
@@ -42,6 +39,37 @@ function meta(ev) {
     default:
       return null;
   }
+}
+
+// Emphasise the leading interrogative (What/Why/How/…) and any quoted phrase in
+// a sub-question, so the intent of each planned point stands out in colour.
+const LEAD_QUESTION = /^(what|why|how|where|which|when|who|whose|whom)\b/i;
+function highlightKeywords(text) {
+  const out = [];
+  let rest = text;
+  const lead = rest.match(LEAD_QUESTION);
+  if (lead) {
+    out.push(
+      <span className="rm-kw" key="kw">
+        {lead[0]}
+      </span>
+    );
+    rest = rest.slice(lead[0].length);
+  }
+  // Colour anything the model wrapped in quotes as the key term of the question.
+  const parts = rest.split(/([“"][^”"]+[”"])/g);
+  parts.forEach((p, i) => {
+    if (/^[“"].*[”"]$/.test(p)) {
+      out.push(
+        <span className="rm-kw" key={`q${i}`}>
+          {p}
+        </span>
+      );
+    } else if (p) {
+      out.push(p);
+    }
+  });
+  return out;
 }
 
 // A smooth curve (Catmull-Rom → cubic bézier) through the node points — the
@@ -193,10 +221,21 @@ export default function ProgressFeed({ events }) {
           }
         };
         // The comet is a forward progress marker: it advances from the previous
-        // frontier node to the newest one and rests there — it never loops back
-        // to the start. On a reflow/first paint it simply sweeps in from node 1.
-        const grew = !widthChanged && prevNRef.current >= 2 && n > prevNRef.current;
-        const startF = grew ? nodeFraction(line, layout[prevNRef.current - 1]) : 0;
+        // frontier to the newest node and rests there — it never loops back.
+        // Three cases decide where it starts:
+        //   • a new step arrived  → sweep from the previous frontier to it
+        //   • first paint         → sweep in from node 1
+        //   • a mere reflow       → sit at the current frontier, no replay
+        // The last case is what stops the loop: a width/layout re-measure (e.g.
+        // the report appearing, a resize, or a scrollbar toggle) must NOT restart
+        // the whole sweep from the start.
+        const firstPaint = prevNRef.current < 2;
+        const grew = prevNRef.current >= 2 && n > prevNRef.current;
+        const startF = grew
+          ? nodeFraction(line, layout[prevNRef.current - 1])
+          : firstPaint
+            ? 0
+            : nodeFraction(line, layout[n - 1]);
         cometTweenRef.current = gsap.to(comet, {
           duration: Math.max(0.9, (1 - startF) * n * 0.9), // gentle pace
           ease: "power2.out",
@@ -301,7 +340,15 @@ export default function ProgressFeed({ events }) {
             cps={90}
             maxMs={900}
           />
-          {curMeta && <div className="rm-cap-meta">{curMeta}</div>}
+          {cur.kind === "plan" && Array.isArray(cur.sub_questions) && cur.sub_questions.length ? (
+            <ol className="rm-cap-plan">
+              {cur.sub_questions.map((q, i) => (
+                <li key={i}>{highlightKeywords(q)}</li>
+              ))}
+            </ol>
+          ) : (
+            curMeta && <div className="rm-cap-meta">{curMeta}</div>
+          )}
         </div>
       </div>
       {n > 1 && (

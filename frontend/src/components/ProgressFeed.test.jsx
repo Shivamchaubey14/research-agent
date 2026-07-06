@@ -59,4 +59,24 @@ describe("ProgressFeed", () => {
     expect(screen.getByText("4 new source(s)")).toBeInTheDocument();
     expect(screen.getByText(/Pinned/)).toBeInTheDocument();
   });
+
+  it("renders planned sub-questions as a list, one point per line", () => {
+    const events = [
+      {
+        id: "e1",
+        kind: "plan",
+        message: "Planned 3 sub-questions",
+        sub_questions: [
+          "What is photosynthesis?",
+          "Where does it occur?",
+          "Why does it matter?",
+        ],
+      },
+    ];
+    render(<ProgressFeed events={events} />);
+    const items = screen.getAllByRole("listitem");
+    expect(items).toHaveLength(3);
+    expect(items[0]).toHaveTextContent("What is photosynthesis?");
+    expect(items[2]).toHaveTextContent("Why does it matter?");
+  });
 });
