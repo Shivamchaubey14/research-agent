@@ -190,7 +190,11 @@ a:hover {
     min-width: 0; /* let the roadmap/report shrink rather than overflow */
     /* keep both columns on one screen; each scrolls its own overflow */
     max-height: calc(100vh - 190px);
-    overflow: auto;
+    overflow: hidden auto; /* only ever a vertical scrollbar */
+    /* Reserve the scrollbar gutter so the content width never changes when the
+       scrollbar toggles — otherwise the roadmap re-measures and the progress
+       comet restarts on a loop. */
+    scrollbar-gutter: stable;
   }
   .run-panes > .report-pane {
     flex: 1.3 1 0; /* give the report a little more width */

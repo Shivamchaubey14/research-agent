@@ -221,10 +221,21 @@ export default function ProgressFeed({ events }) {
           }
         };
         // The comet is a forward progress marker: it advances from the previous
-        // frontier node to the newest one and rests there — it never loops back
-        // to the start. On a reflow/first paint it simply sweeps in from node 1.
-        const grew = !widthChanged && prevNRef.current >= 2 && n > prevNRef.current;
-        const startF = grew ? nodeFraction(line, layout[prevNRef.current - 1]) : 0;
+        // frontier to the newest node and rests there — it never loops back.
+        // Three cases decide where it starts:
+        //   • a new step arrived  → sweep from the previous frontier to it
+        //   • first paint         → sweep in from node 1
+        //   • a mere reflow       → sit at the current frontier, no replay
+        // The last case is what stops the loop: a width/layout re-measure (e.g.
+        // the report appearing, a resize, or a scrollbar toggle) must NOT restart
+        // the whole sweep from the start.
+        const firstPaint = prevNRef.current < 2;
+        const grew = prevNRef.current >= 2 && n > prevNRef.current;
+        const startF = grew
+          ? nodeFraction(line, layout[prevNRef.current - 1])
+          : firstPaint
+            ? 0
+            : nodeFraction(line, layout[n - 1]);
         cometTweenRef.current = gsap.to(comet, {
           duration: Math.max(0.9, (1 - startF) * n * 0.9), // gentle pace
           ease: "power2.out",
