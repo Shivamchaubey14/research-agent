@@ -1,96 +1,123 @@
 # DeepResearch — Agentic AI Research Assistant (RAG + Tool Use)
 
-An end-to-end, production-style **GenAI / Agentic / RAG** application.
+Ask a question and DeepResearch's agent **plans** the sub-questions, **searches** the web
+and your own uploaded documents, **verifies** each claim against its sources, and hands
+back a properly **cited report** — streaming every step to you live so you can watch it think.
 
-Give it a question → an autonomous agent **plans** sub-questions, **searches** the web
-and your uploaded documents, **verifies** claims against sources, and writes a
-**cited research report** — streaming each step to you live.
-
-Built to demonstrate real production engineering, not just an API call:
-microservices, async messaging, containerization, orchestration, CI/CD, and evals.
+I built this end to end to see what it takes to move an AI agent from a notebook demo to a
+real, production-shaped system: an event-driven backend with async workers, live streaming,
+retrieval-augmented generation, observability, an automated evaluation gate, and a full
+CI/CD + Kubernetes setup — not just an LLM call behind a form.
 
 [![CI](https://github.com/Shivamchaubey14/research-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Shivamchaubey14/research-agent/actions/workflows/ci.yml)
 
 ---
 
-## Architecture
+## A look at it
+
+Every research run streams its progress as an animated roadmap on the left while the cited
+report builds on the right — the two sit side by side on desktop and stack on mobile.
+
+![Run page — live progress and the cited report side by side](docs/images/run.png)
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/home.png" alt="Home — ask a question, pick a depth, browse run history" /></td>
+    <td width="50%"><img src="docs/images/signin.png" alt="Sign in" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Ask a question, choose a depth, and browse past runs</em></td>
+    <td align="center"><em>Email + password auth (JWT with silent refresh)</em></td>
+  </tr>
+</table>
+
+---
+
+## What it does
+
+- **Autonomous research loop** — the agent plans sub-questions, searches, reads results,
+  verifies claims, and only then writes the report. Every factual statement carries a
+  numbered citation back to its source.
+- **Live progress** — each step (plan → search → observe → verify → report) streams to the
+  browser over Server-Sent Events, so a run is transparent instead of a spinner.
+- **Bring your own documents (RAG)** — upload PDFs/text and the agent will search and cite
+  *your* files alongside the web, scoped so you only ever retrieve your own content.
+- **Depth control** — `quick`, `standard`, or `deep` trades off iterations, searches, and
+  token/latency budget.
+- **Run history & cost** — every run is saved with its report, token usage, and dollar cost.
+
+---
+
+## How it works
 
 ```
 React (Vite)  ──HTTP / SSE──►  Django + DRF ──produce──►  Kafka  ──consume──►  Agent Worker(s)
      ▲                              │   ▲                   topics                   │
-     │                           MySQL    │             (jobs, events)      Groq API + Web Search
+     │                           MySQL    │             (jobs, events)      LLM API + Web Search
      └──── live progress ◄── Redis ◄──────┴───────── progress events ◄───────────────┘
                                                                        Qdrant (RAG vector store)
 ```
 
-| Layer            | Tech                                  | Responsibility                                        |
-|------------------|---------------------------------------|-------------------------------------------------------|
-| Frontend         | React + Vite                          | Chat UI, live agent-step streaming, report viewer     |
-| API              | Django + Django REST Framework, JWT   | Auth, users, reports, run history, job dispatch        |
-| Messaging        | Apache Kafka                          | Async job queue + progress event stream                |
-| Worker           | Python (Kafka consumer)               | The agent loop: plan → search → verify → cite          |
-| LLM              | Groq (OpenAI-compatible API)          | Reasoning, tool use, synthesis                          |
-| RAG store        | Qdrant                                | Vector search over uploaded documents                  |
-| Cache / fan-out  | Redis                                 | Caching + SSE/WebSocket progress fan-out               |
-| Database         | MySQL 8                               | Source of truth                                        |
-| Containerization | Docker / docker-compose               | Local dev, every service containerized                 |
-| Orchestration    | Kubernetes                            | Production deploy, independent worker scaling          |
-| CI/CD            | GitHub Actions                        | Lint → test → build images → deploy                    |
+The system is **event-driven on purpose**: a research run can take a while and lean on a slow
+LLM, so the API never does that work inline.
+
+1. The **Django + DRF API** authenticates the user, saves the run, and drops a job onto a
+   **Kafka** topic — then returns immediately.
+2. A **Python worker** consumes the job and runs the agent's tool-use loop
+   (*plan → search → verify → cite*), driving the run through
+   `QUEUED → RUNNING → COMPLETED / FAILED / CANCELLED` and persisting the report, citations,
+   tokens, and cost. A terminally failed job is routed to a dead-letter topic for inspection.
+3. Every step the agent takes is written to a per-run **Redis stream**, which the API replays
+   to the browser as **Server-Sent Events** — ordered, resumable on reconnect (`Last-Event-ID`),
+   and retained so a late subscriber still sees the whole run.
+4. Uploaded documents are chunked, embedded locally, and stored in **Qdrant**; at run time the
+   agent gets a `document_search` tool that retrieves the most relevant chunks (filtered to the
+   owner) and folds them into its evidence.
+
+The worker reuses the backend's ORM and messaging/streaming helpers, so the data schema and
+event format have a single source of truth across both services.
 
 ---
 
-## Repository layout
+## Tech stack
 
-```
-research-agent/
-├── backend/          # Django + DRF API (auth, reports, job dispatch)
-├── worker/           # Kafka consumer running the agent loop
-├── frontend/         # React (Vite) single-page app
-├── infra/
-│   ├── k8s/          # Kubernetes manifests
-│   └── ...           # other infra config
-├── .github/
-│   └── workflows/    # CI/CD pipelines
-├── docker-compose.yml
-├── .env.example
-└── README.md
-```
+| Layer            | Tech                                   | Responsibility                                       |
+|------------------|----------------------------------------|------------------------------------------------------|
+| Frontend         | React + Vite                           | Auth UI, live agent-step streaming, report viewer    |
+| API              | Django + Django REST Framework, JWT    | Auth, users, reports, run history, job dispatch      |
+| Messaging        | Apache Kafka                           | Async job queue + dead-letter topic                  |
+| Worker           | Python (Kafka consumer)                | The agent loop: plan → search → verify → cite        |
+| LLM              | Groq (OpenAI-compatible API)           | Reasoning, tool use, synthesis                       |
+| Web search       | Tavily                                 | Client-side `web_search` tool                        |
+| RAG store        | Qdrant + fastembed (`bge-small-en`)    | Vector search over uploaded documents                |
+| Streaming / cache| Redis Streams                          | Live SSE progress fan-out                            |
+| Database         | MySQL 8                                | Source of truth                                      |
+| Packaging        | Docker / docker-compose                | Every service containerized                          |
+| Orchestration    | Kubernetes                             | Independent worker autoscaling (HPA)                 |
+| CI/CD            | GitHub Actions                         | Lint → test → build images → eval gate               |
 
 ---
 
-## Quick start (local)
+## Getting started
+
+The fastest path is Docker — it boots MySQL, Qdrant, Kafka, Redis, the API, the worker, and
+the frontend together:
 
 ```bash
-cp .env.example .env          # then add your GROQ_API_KEY (Tavily key optional)
-docker compose up --build     # boots mysql, qdrant, kafka, redis, backend, worker, frontend
+cp .env.example .env          # add your GROQ_API_KEY (TAVILY_API_KEY optional, enables web search)
+docker compose up --build
 ```
 
-| Service   | URL                       |
-|-----------|---------------------------|
-| Frontend  | http://localhost:5173     |
-| API       | http://localhost:8000/api |
-| Qdrant UI | http://localhost:6333/dashboard |
+| Service   | URL                              |
+|-----------|----------------------------------|
+| Frontend  | http://localhost:5173            |
+| API       | http://localhost:8000/api        |
+| Qdrant UI | http://localhost:6333/dashboard  |
 
----
+<details>
+<summary><strong>Running a service on its own (without Docker)</strong></summary>
 
-## Build phases
-
-- [x] **Phase 0** — Monorepo skeleton + docker-compose
-- [x] **Phase 1** — Django API + JWT auth + MySQL models
-- [x] **Phase 2** — Agent worker (Groq tool-use loop)
-- [x] **Phase 3** — Kafka wiring + Redis SSE streaming
-- [x] **Phase 4** — React UI
-- [x] **Phase 5** — RAG with Qdrant
-- [x] **Phase 6** — Evals + observability
-- [x] **Phase 7** — Dockerfiles → CI/CD → Kubernetes
-- [ ] **Phase 8** — Live deploy + polish  ← *current*
-
----
-
-## Backend API (Phase 1)
-
-The Django + DRF API lives in `backend/`. Run it locally against a MySQL
-instance (defaults assume user `root`, database `research`):
+**Backend** (needs a local MySQL; defaults assume user `root`, database `research`):
 
 ```bash
 cd backend
@@ -100,45 +127,16 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-Endpoints are versioned under `/api/v1`:
+**Frontend:**
 
-| Method & Path                     | Auth | Purpose                                  |
-|-----------------------------------|------|------------------------------------------|
-| `POST /auth/register`             | —    | Create an account                        |
-| `POST /auth/token`                | —    | Obtain JWT access + refresh tokens       |
-| `POST /auth/token/refresh`        | JWT  | Rotate the access token                  |
-| `GET  /auth/me`                   | JWT  | Current user profile                     |
-| `POST /runs`                      | JWT  | Submit a question → `QUEUED` run         |
-| `GET  /runs`                      | JWT  | List the caller's runs (newest first)    |
-| `GET  /runs/{id}`                 | JWT  | Fetch a run and its report               |
-| `GET  /runs/{id}/events`          | JWT  | Live progress over SSE (`?token=` for EventSource) |
-| `POST /runs/{id}/cancel`          | JWT  | Cancel a `QUEUED`/`RUNNING` run          |
-| `POST /documents`                 | JWT  | Upload a document for RAG ingestion      |
-| `GET  /documents`                 | JWT  | List the caller's documents              |
-| `GET  /health`                    | —    | Liveness/readiness probe                 |
+```bash
+cd frontend
+npm install
+npm run dev          # http://localhost:5173  (override the API base with VITE_API_URL)
+```
 
-Run the test suite with `python manage.py test`.
-
----
-
-## Agent worker (Phase 2)
-
-The autonomous research agent lives in `worker/`. It runs a Groq tool-use loop
-— **plan** the sub-questions, **search** the web, **verify** claims against
-sources, **cite** them — and emits a structured progress event for every step.
-Output is a structured report (summary + sections + citations) that maps onto
-the `Report`/`Citation` models.
-
-It uses Groq (`openai/gpt-oss-120b` by default, overridable via `AGENT_MODEL`)
-with `reasoning_effort` scaled by depth. Groq's chat models don't search the
-web themselves, so the agent calls a client-side `web_search` tool backed by
-[Tavily](https://tavily.com) — set `TAVILY_API_KEY` to enable it (the agent
-runs without web search if it's unset). Research depth
-(`quick`/`standard`/`deep`) controls the iteration, search and
-token/wall-clock budgets.
-
-To develop the agent in isolation (no Kafka/Redis), run one job from the CLI —
-progress prints to stderr, the final cited report to stdout:
+**Agent worker** — you can run one research job straight from the CLI, no Kafka/Redis needed
+(progress prints to stderr, the final cited report to stdout):
 
 ```bash
 cd worker
@@ -149,155 +147,94 @@ export TAVILY_API_KEY=tvly-...                           # optional: web search
 python -m worker.cli "Compare Kafka and RabbitMQ for an event queue" --depth deep
 ```
 
----
-
-## Messaging & live streaming (Phase 3)
-
-Submitting a run publishes a job to the Kafka topic `research.jobs`; the worker
-(`python -m worker.main`) consumes it, drives the run through
-`QUEUED → RUNNING → (COMPLETED | FAILED | CANCELLED)` (FR-RUN-4), persists the
-report and citations, and accounts tokens/cost. A terminally failed run is
-routed to `research.jobs.dlq` (FR-RUN-7).
-
-Every agent step is published to a per-run **Redis stream**; the API exposes it
-at `GET /runs/{id}/events` as Server-Sent Events (FR-STR-1..4). Redis streams
-give ordered delivery, a resumable cursor (reconnect with `Last-Event-ID`), and
-history for late subscribers; each run ends with one terminal event. The worker
-reuses the backend's Django ORM and the shared `research.messaging` /
-`research.streaming` helpers so the schema and event format have a single source
-of truth.
+</details>
 
 ---
 
-## Frontend (Phase 4)
+## API
 
-A React + Vite single-page app in `frontend/`: email/password auth (JWT with
-silent refresh), a question/depth submission form, a run-history list, and a run
-view that streams the agent's steps live over SSE and renders the final cited
-report. It subscribes to `GET /runs/{id}/events` via `EventSource` (token passed
-as a query parameter) and refetches the run for the report on the terminal
-event.
+Endpoints are versioned under `/api/v1`:
+
+| Method & Path                | Auth  | Purpose                                             |
+|------------------------------|-------|-----------------------------------------------------|
+| `POST /auth/register`        | —     | Create an account                                   |
+| `POST /auth/token`           | —     | Obtain JWT access + refresh tokens                  |
+| `POST /auth/token/refresh`   | JWT   | Rotate the access token                             |
+| `GET  /auth/me`              | JWT   | Current user profile                                |
+| `POST /runs`                 | JWT   | Submit a question → a `QUEUED` run                  |
+| `GET  /runs`                 | JWT   | List the caller's runs (newest first)               |
+| `GET  /runs/{id}`            | JWT   | Fetch a run and its report                          |
+| `GET  /runs/{id}/events`     | JWT   | Live progress over SSE (`?token=` for EventSource)  |
+| `POST /runs/{id}/cancel`     | JWT   | Cancel a `QUEUED`/`RUNNING` run                     |
+| `POST /documents`            | JWT   | Upload a document for RAG ingestion                 |
+| `GET  /documents`            | JWT   | List the caller's documents                         |
+| `GET  /health` · `/ready`    | —     | Liveness / per-dependency readiness                 |
+| `GET  /admin/metrics` · `/admin/runs` | staff | Run counts, queue depth, cost, worker heartbeat |
+
+---
+
+## Quality: tests, observability & evals
+
+- **Tests** — unit suites across the backend, worker, and frontend run on every push and PR.
+- **Structured logging** — both tiers emit one JSON event per line, correlated by `run_id`, so
+  a single run can be traced across the API and the worker.
+- **Health & readiness** — `/health` (process + DB) and `/ready` (per-dependency: DB, Redis,
+  Kafka, Qdrant). `/ready` only fails hard if the database is down; a transient Qdrant/Kafka
+  blip reports `degraded` rather than pulling the API out of rotation.
+- **Agent evaluation** — because the agent is probabilistic, quality is measured with a
+  versioned eval suite (LLM-as-judge on faithfulness, citation validity, answer relevance, and
+  hallucination rate, plus cost and latency). It runs the *real* pipeline and exits non-zero
+  when it drops below threshold, so CI can block a regressing release.
 
 ```bash
-cd frontend
-npm install
-# API base defaults to http://localhost:8000/api; override with VITE_API_URL
-npm run dev          # http://localhost:5173
-```
+# backend / worker / frontend test suites
+python backend/manage.py test
+python -m unittest discover -s worker/tests -t .
+cd frontend && npm test
 
----
-
-## RAG ingestion (Phase 5)
-
-Uploading a document (`POST /documents`) persists the file and publishes a
-`documents.ingest` job. The worker consumes it (alongside research jobs),
-extracts the text (PDF via `pypdf`; TXT/Markdown directly), splits it into
-overlapping chunks, embeds them locally with **fastembed** (`bge-small-en-v1.5`,
-no embedding API key), and upserts them into a **Qdrant** collection. Each chunk
-keeps a `user_id` (so retrieval is scoped to the owner) and a resolvable
-`document_id#chunk_index` reference back to its source. The document's status
-moves `processing → ready` (or `failed`) with its chunk count (FR-RAG-1,2,5,6).
-
-When a run's user has ingested documents, the agent is given a client-side
-`document_search` tool alongside web search: it embeds the query, retrieves the
-top-k most relevant chunks from Qdrant (filtered to that user — FR-RAG-3), and
-folds them into the evidence as first-class sources. Document-backed claims are
-cited with `kind="document"` and the chunk's `doc_ref` (FR-RAG-4, FR-RPT-2).
-Runs by users with no documents are unchanged (web only).
-
----
-
-## Observability (Phase 6)
-
-Both tiers log **structured JSON**, one event per line, correlated by `run_id`
-so a single run can be traced across the API and worker (NFR-OBS-1, FR-ADM-2).
-
-Operational endpoints:
-
-| Method & Path                 | Auth  | Purpose                                                   |
-|-------------------------------|-------|----------------------------------------------------------|
-| `GET /health`                 | —     | Liveness — process up + database reachable               |
-| `GET /ready`                  | —     | Readiness — per-dependency check (DB, Redis, Kafka, Qdrant) |
-| `GET /admin/metrics`          | staff | Run counts, queue depth, error rate, avg latency, token spend, cost, worker heartbeat |
-| `GET /admin/runs?status=`     | staff | Inspect runs across users (defaults to `FAILED`)         |
-
-`/ready` returns 503 only if the database is down; other dependencies are
-reported as `degraded` so a transient Qdrant/Kafka blip doesn't pull the API
-out of rotation. The worker writes a heartbeat to Redis that `/admin/metrics`
-surfaces (FR-ADM-1,3,4, NFR-OBS-2).
-
----
-
-## Agent evaluation (Phase 6)
-
-Because the agent is probabilistic, quality is measured with a versioned eval
-suite rather than fixed assertions (SRS §11.2). It runs the agent over a curated
-question set and scores each report with an **LLM-as-judge** on faithfulness,
-citation validity, answer relevance and hallucination rate, alongside per-run
-cost and latency. The suite mean of each metric is gated against promotion
-thresholds and the command exits non-zero on failure, so CI can block a
-regressing release.
-
-```bash
-cd worker
+# the agent eval gate (needs GROQ_API_KEY)
 python -m worker.evals            # prints a scorecard; exit code gates CI
-python -m worker.evals out.json   # also writes full results
 ```
 
-The harness reuses the same `ResearchAgent` the worker runs, so it measures the
-real pipeline; it needs `GROQ_API_KEY` (agent + judge both call Groq), and
-`TAVILY_API_KEY` if you want web search during the eval.
+---
+
+## Deployment
+
+Every service has a Dockerfile, and `docker compose up --build` runs the whole stack locally.
+For a cluster, `infra/k8s/` holds Kubernetes manifests (`kubectl apply -k infra/k8s`): the
+backing infra as StatefulSets with PVCs, the API behind a Service with `/health` + `/ready`
+probes and a migrate init-container, the **worker as its own Deployment with a CPU
+HorizontalPodAutoscaler** so it scales independently of the API, and an nginx Ingress that
+routes `/api` → backend and `/` → frontend with SSE buffering disabled.
+
+CI/CD runs in GitHub Actions: `ci.yml` lints (ruff), runs the test suites against a MySQL
+service container, builds the frontend, and builds all three Docker images — so a broken
+Dockerfile or failing test blocks the merge. A separate `evals.yml` runs the agent eval gate
+on a schedule.
 
 ---
 
-## Containerization (Phase 7)
+## Project structure
 
-Every service has a Dockerfile, so `docker compose up --build` boots the whole
-stack (infra + API + worker + frontend):
-
-- **backend** — `python:3.13-slim`, installs `requirements.txt`, runs gunicorn
-  (compose overrides with `runserver` for dev).
-- **worker** — built from the **repo root** (`worker/Dockerfile`) because it
-  bundles the backend ORM package it reuses; installs the worker stack
-  (Django + driver, Kafka/Redis, `qdrant-client[fastembed]`, `pypdf`).
-- **frontend** — `node:20-alpine` running the Vite dev server.
-
-`.dockerignore` files keep build contexts lean (no `.venv`, `node_modules`,
-`media`, or `.env`).
+```
+research-agent/
+├── backend/          # Django + DRF API (auth, reports, job dispatch, admin metrics)
+├── worker/           # Kafka consumer running the agent loop + RAG ingestion + evals
+├── frontend/         # React (Vite) single-page app
+├── infra/k8s/        # Kubernetes manifests
+├── .github/workflows # CI + eval pipelines
+├── docker-compose.yml
+└── .env.example
+```
 
 ---
 
-## CI/CD (Phase 7)
+## Roadmap
 
-GitHub Actions in `.github/workflows/`:
+Built and working: JWT auth and the relational data model · the agent worker
+(plan → search → verify → cite) · async job dispatch with live SSE streaming · the React UI ·
+full RAG (document ingestion + agent retrieval) · structured logging and operational
+endpoints · a gated agent-eval suite · and the containerization / CI/CD / Kubernetes layer.
 
-- **`ci.yml`** (every push/PR to `main`): lints with **ruff**, runs Django's
-  system check and the **test suite** against a MySQL service container, builds
-  the **frontend**, and builds all three **Docker images** — so a broken
-  Dockerfile or failing test blocks the merge (NFR-MNT-1/2).
-- **`evals.yml`** (manual + weekly): runs the agent **eval gate**
-  (`python -m worker.evals`) using the `GROQ_API_KEY` (and optional
-  `TAVILY_API_KEY`) repo secrets and uploads the scorecard. It's separate from
-  `ci.yml` because it calls the Groq API (secret + rate limits); the CLI's exit
-  code gates promotion (§11.2).
-
-## Kubernetes (Phase 7)
-
-Manifests in `infra/k8s/` deploy the whole stack (`kubectl apply -k infra/k8s`):
-the backing infra as StatefulSets/Deployments with PVCs, the API behind a
-Service with `/health` + `/ready` probes and a migrate init container, the
-**worker as its own Deployment with a CPU HorizontalPodAutoscaler** (independent
-scaling), and an nginx Ingress routing `/api` → backend and `/` → frontend with
-SSE buffering disabled. Secrets are placeholders — override before applying. See
-[`infra/k8s/README.md`](infra/k8s/README.md) for prerequisites and steps.
-
----
-
-## Status
-
-🚧 Phases 0–7 complete — API + JWT auth, the relational data model, the agent
-worker (plan → search → verify → cite), async job dispatch with live SSE
-streaming, the React UI, full RAG (document ingestion + agent retrieval),
-structured logging + operational endpoints, a gated agent-eval suite, and the
-full containerization / CI/CD / Kubernetes layer are in place. Next up: live
-deploy + polish (Phase 8).
+Next up: a live public deployment and polish — pushing images from CI, a production frontend
+build behind nginx, managed secrets, and TLS.
